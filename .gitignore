@@ -1,0 +1,24 @@
+# GPX tracks
+tracks/
+
+# Node modules
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Videos
+*.mp4
+*.avi
+*.mov
