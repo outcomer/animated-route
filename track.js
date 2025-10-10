@@ -399,7 +399,7 @@ class TrackVisualization {
 
 			this.ui.updateInfoBox({
 				title: this.state.title,
-				date: 'October 7, 2025',
+				date: this.state.date,
 				distance: distance,
 				elevation: elevation,
 				movingSpeed: movingSpeed,

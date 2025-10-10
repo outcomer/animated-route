@@ -57,8 +57,12 @@ button:disabled {
 	padding: 20px;
 	border-radius: 10px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-	max-width: 350px;
+	max-width: 50vw;
 	transition: opacity 0.8s ease-in-out;
+}
+
+strong {
+	font-weight: normal;
 }
 
 .info-box h2 {
