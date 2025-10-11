@@ -29,7 +29,7 @@ const path = require('path');
 
 		// Открыть HTML файл
 		console.log('Загрузка страницы...');
-		await page.goto(`http://localhost:8000/video/track.html`, { waitUntil: 'networkidle0' });
+		await page.goto(`http://localhost:8000/track.html`, { waitUntil: 'networkidle0' });
 
 		// Начать запись
 		console.log('Начало записи...');

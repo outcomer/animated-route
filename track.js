@@ -303,7 +303,7 @@ class RouteAnimator {
 			color: this.state.trackColor,
 			weight: 4,
 			opacity: 0.8,
-			smoothFactor: 1.0
+			smoothFactor: 2.0
 		}).addTo(this.map);
 
 		const percent = Math.round((this.currentStep / this.state.fullRoute.length) * 100);
