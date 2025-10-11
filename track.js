@@ -189,11 +189,33 @@ class RouteAnimator {
 		this.map = map;
 		this.state = state;
 		this.ui = ui;
-		this.animationInterval = null;
+		this.animationTimeout = null;
 		this.currentStep = 0;
 		this.animatedLine = null;
 		this.isRunning = false;
 		this.isPaused = false;
+		this.distances = []; // Расстояния между точками
+		this.avgDistance = 0; // Среднее расстояние
+		this.smoothDistance = 0; // Сглаженное расстояние
+		this.smoothingAlpha = 0.75; // Коэффициент сглаживания (0.75 = 75% предыдущее, 25% новое)
+	}
+
+	// Предварительный расчет расстояний между точками
+	precalculateDistances() {
+		this.distances = [];
+		for (let i = 1; i < this.state.fullRoute.length; i++) {
+			const dist = GPXMetrics.calculateDistance([
+				this.state.fullRoute[i - 1],
+				this.state.fullRoute[i]
+			]);
+			this.distances.push(dist);
+		}
+
+		// Рассчитываем среднее расстояние для нормализации
+		if (this.distances.length > 0) {
+			this.avgDistance = this.distances.reduce((a, b) => a + b, 0) / this.distances.length;
+			this.smoothDistance = this.distances[0]; // Инициализируем первым значением
+		}
 	}
 
 	start() {
@@ -203,26 +225,70 @@ class RouteAnimator {
 		this.isRunning = true;
 		this.isPaused = false;
 
-		this.animationInterval = setInterval(() => {
-			if (this.isPaused) return;
+		// Предварительно рассчитываем расстояния
+		this.precalculateDistances();
 
-			if (this.currentStep >= this.state.fullRoute.length) {
-				this.complete();
-				return;
-			}
+		// Запускаем первый шаг
+		this.scheduleNextStep();
+	}
 
-			this.animateStep();
-		}, 50 / Math.min(this.state.speed, 10));
+	scheduleNextStep() {
+		if (!this.isRunning) return;
+
+		if (this.currentStep >= this.state.fullRoute.length) {
+			this.complete();
+			return;
+		}
+
+		if (this.isPaused) {
+			// Если на паузе, проверяем снова через 50ms
+			this.animationTimeout = setTimeout(() => this.scheduleNextStep(), 50);
+			return;
+		}
+
+		this.animateStep();
+
+		// Рассчитываем задержку до следующего шага на основе расстояния
+		const delay = this.calculateDelay();
+		this.animationTimeout = setTimeout(() => this.scheduleNextStep(), delay);
+	}
+
+	calculateDelay() {
+		const baseDelay = 50; // Базовая задержка в мс
+
+		if (this.currentStep >= this.distances.length) {
+			return baseDelay / this.state.speed;
+		}
+
+		// Текущее расстояние до следующей точки
+		const currentDistance = this.distances[this.currentStep];
+
+		// Экспоненциальное сглаживание
+		this.smoothDistance = this.smoothingAlpha * this.smoothDistance +
+		                      (1 - this.smoothingAlpha) * currentDistance;
+
+		// Нормализуем относительно среднего расстояния
+		// Если расстояние больше среднего -> была высокая скорость -> быстрее анимация
+		// Если расстояние меньше среднего -> была низкая скорость -> медленнее анимация
+		let normalizedDistance = this.smoothDistance / this.avgDistance;
+
+		// Применяем интенсивность эффекта через степенную функцию
+		// intensity = 1.0 -> линейный эффект
+		// intensity > 1.0 -> усиленный эффект (более драматичная разница)
+		// intensity < 1.0 -> ослабленный эффект (менее заметная разница)
+		const intensity = this.state.animationIntensity || 1.0;
+		normalizedDistance = Math.pow(normalizedDistance, intensity);
+
+		// Задержка обратно пропорциональна расстоянию
+		// Умножаем на speedMultiplier и ограничиваем минимум
+		const delay = Math.max(10, baseDelay / normalizedDistance / this.state.speed);
+
+		return delay;
 	}
 
 	animateStep() {
-		// Для скоростей > 10 добавляем несколько точек за раз
-		let step = 1;
-		if (this.state.speed > 10) {
-			step = Math.floor((this.state.speed - 10) / 2) + 1;
-		}
+		this.currentStep++;
 
-		this.currentStep += step;
 		if (this.currentStep > this.state.fullRoute.length) {
 			this.currentStep = this.state.fullRoute.length;
 		}
@@ -237,13 +303,13 @@ class RouteAnimator {
 			color: this.state.trackColor,
 			weight: 4,
 			opacity: 0.8,
-			smoothFactor: 2.0 // Увеличиваем упрощение для лучшей производительности
+			smoothFactor: 1.0
 		}).addTo(this.map);
 
 		const percent = Math.round((this.currentStep / this.state.fullRoute.length) * 100);
 		this.ui.updateProgress(percent);
 
-		// Плавное панорамирование на всех скоростях
+		// Плавное панорамирование
 		if (this.currentStep > 0) {
 			const point = this.state.fullRoute[this.currentStep - 1];
 			this.map.panTo([point.lat, point.lng], { animate: true });
@@ -277,7 +343,10 @@ class RouteAnimator {
 	stop() {
 		this.isRunning = false;
 		this.isPaused = false;
-		clearInterval(this.animationInterval);
+		if (this.animationTimeout) {
+			clearTimeout(this.animationTimeout);
+			this.animationTimeout = null;
+		}
 		this.ui.setButtonStates(false, true, false);
 		this.ui.setPauseButtonText('⏸ Pause');
 	}
@@ -290,6 +359,7 @@ class RouteAnimator {
 	reset() {
 		this.stop();
 		this.currentStep = 0;
+		this.smoothDistance = 0; // Сбрасываем сглаживание
 
 		if (this.animatedLine) {
 			this.map.removeLayer(this.animatedLine);
