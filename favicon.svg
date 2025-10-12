@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Фон -->
+  <rect width="100" height="100" fill="#4CAF50" rx="15"/>
+
+  <!-- Линия маршрута (волнистая) -->
+  <path d="M 20 30 Q 35 20, 50 30 T 80 30"
+        stroke="white"
+        stroke-width="6"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Точка старта -->
+  <circle cx="20" cy="30" r="8" fill="white"/>
+  <circle cx="20" cy="30" r="5" fill="#4CAF50"/>
+
+  <!-- Точка финиша -->
+  <circle cx="80" cy="30" r="8" fill="white"/>
+  <circle cx="80" cy="30" r="5" fill="#F44336"/>
+
+  <!-- Стрелка воспроизведения внизу -->
+  <path d="M 40 65 L 60 75 L 40 85 Z" fill="white"/>
+</svg>
