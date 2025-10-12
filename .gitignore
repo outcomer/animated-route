@@ -22,3 +22,6 @@ npm-debug.log*
 *.mp4
 *.avi
 *.mov
+
+# AI
+.claude

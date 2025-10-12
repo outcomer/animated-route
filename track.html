@@ -13,13 +13,12 @@
 	<div id="map"></div>
 	<div class="controls">
 		<button id="startBtn">▶ Start animation</button>
-		<button id="pauseBtn" disabled>⏸ Pause</button>
-		<button id="resetBtn">↻ Reset</button>
+		<button id="recordBtn">⏺ Записать</button>
 		<div class="speed-control">
 			<label>
 				Speed: <span id="speedLabel"></span>
 			</label>
-			<input type="range" id="speedSlider" min="1" max="30" step="1">
+			<input type="range" id="speedSlider" min="-5" max="5" step="1" value="0">
 		</div>
 	</div>
 	<div class="info-box hidden">
@@ -37,7 +36,7 @@
 			weight: 79, // вес в кг для расчёта калорий
 
 			// Настройки визуализации
-			speed: 4,
+			speed: 0, // Значение слайдера (-5 до +5, где 0 = базовая скорость)
 			animationIntensity: 1.5, // Сила эффекта замедления (1.0 = линейно, 2.0 = сильно, 0.5 = слабо)
 			trackColor: 'rgb(0 0 0)',
 			// 1. OSM Standard (базовая):

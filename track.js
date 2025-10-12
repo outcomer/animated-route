@@ -87,8 +87,7 @@ class UIController {
 		this.infoBox = document.querySelector('.info-box');
 		this.progress = document.getElementById('progress');
 		this.startBtn = document.getElementById('startBtn');
-		this.pauseBtn = document.getElementById('pauseBtn');
-		this.resetBtn = document.getElementById('resetBtn');
+		this.recordBtn = document.getElementById('recordBtn');
 		this.speedSlider = document.getElementById('speedSlider');
 		this.speedLabel = document.getElementById('speedLabel');
 	}
@@ -163,18 +162,10 @@ class UIController {
 		this.progress = document.getElementById('progress');
 	}
 
-	setButtonStates(start, pause, reset) {
-		this.startBtn.disabled = start;
-		this.pauseBtn.disabled = pause;
-		this.resetBtn.disabled = reset;
-	}
-
-	setPauseButtonText(text) {
-		this.pauseBtn.textContent = text;
-	}
-
 	updateSpeedLabel(speed) {
-		this.speedLabel.textContent = `${speed}x`;
+		// Показываем значение слайдера со знаком
+		const displayValue = speed > 0 ? `+${speed}` : speed;
+		this.speedLabel.textContent = displayValue;
 	}
 
 	initSpeed(speed) {
@@ -193,7 +184,6 @@ class RouteAnimator {
 		this.currentStep = 0;
 		this.animatedLine = null;
 		this.isRunning = false;
-		this.isPaused = false;
 		this.distances = []; // Расстояния между точками
 		this.avgDistance = 0; // Среднее расстояние
 		this.smoothDistance = 0; // Сглаженное расстояние
@@ -221,9 +211,8 @@ class RouteAnimator {
 	start() {
 		if (this.isRunning) return;
 
-		this.ui.setButtonStates(true, false, true);
+		this.ui.startBtn.disabled = true;
 		this.isRunning = true;
-		this.isPaused = false;
 
 		// Предварительно рассчитываем расстояния
 		this.precalculateDistances();
@@ -240,12 +229,6 @@ class RouteAnimator {
 			return;
 		}
 
-		if (this.isPaused) {
-			// Если на паузе, проверяем снова через 50ms
-			this.animationTimeout = setTimeout(() => this.scheduleNextStep(), 50);
-			return;
-		}
-
 		this.animateStep();
 
 		// Рассчитываем задержку до следующего шага на основе расстояния
@@ -256,8 +239,12 @@ class RouteAnimator {
 	calculateDelay() {
 		const baseDelay = 50; // Базовая задержка в мс
 
+		// Конвертируем значение слайдера (-5 до +5) в реальную скорость
+		// 0 на слайдере = 4x скорость (базовая)
+		const actualSpeed = Math.max(0.5, 4 + this.state.speed);
+
 		if (this.currentStep >= this.distances.length) {
-			return baseDelay / this.state.speed;
+			return baseDelay / actualSpeed;
 		}
 
 		// Текущее расстояние до следующей точки
@@ -281,7 +268,7 @@ class RouteAnimator {
 
 		// Задержка обратно пропорциональна расстоянию
 		// Умножаем на speedMultiplier и ограничиваем минимум
-		const delay = Math.max(10, baseDelay / normalizedDistance / this.state.speed);
+		const delay = Math.max(10, baseDelay / normalizedDistance / actualSpeed);
 
 		return delay;
 	}
@@ -342,40 +329,13 @@ class RouteAnimator {
 
 	stop() {
 		this.isRunning = false;
-		this.isPaused = false;
 		if (this.animationTimeout) {
 			clearTimeout(this.animationTimeout);
 			this.animationTimeout = null;
 		}
-		this.ui.setButtonStates(false, true, false);
-		this.ui.setPauseButtonText('⏸ Pause');
+		this.ui.startBtn.disabled = false;
 	}
 
-	pause() {
-		this.isPaused = !this.isPaused;
-		this.ui.setPauseButtonText(this.isPaused ? '▶ Continue' : '⏸ Pause');
-	}
-
-	reset() {
-		this.stop();
-		this.currentStep = 0;
-		this.smoothDistance = 0; // Сбрасываем сглаживание
-
-		if (this.animatedLine) {
-			this.map.removeLayer(this.animatedLine);
-			this.animatedLine = null;
-		}
-
-		if (this.state.fullRoute.length > 0) {
-			const point = this.state.fullRoute[0];
-			this.map.setView([point.lat, point.lng], this.state.routeZoom);
-		}
-
-		this.ui.clearProgress();
-		this.ui.setButtonStates(false, true, true);
-		this.ui.showControls();
-		this.ui.hideInfoBox();
-	}
 }
 
 // Главный класс приложения
@@ -496,17 +456,85 @@ class TrackVisualization {
 			this.ui.showCountdown(() => this.animator.start());
 		});
 
-		this.ui.pauseBtn.addEventListener('click', () => {
-			this.animator.pause();
-		});
-
-		this.ui.resetBtn.addEventListener('click', () => {
-			this.animator.reset();
-		});
-
 		this.ui.speedSlider.addEventListener('input', (e) => {
 			this.state.speed = parseInt(e.target.value);
 			this.ui.updateSpeedLabel(this.state.speed);
 		});
+
+		if (this.ui.recordBtn) {
+			this.ui.recordBtn.addEventListener('click', () => {
+				console.log('Record button clicked');
+				this.startRecording();
+			});
+		} else {
+			console.error('Record button not found!');
+		}
+	}
+
+	async startRecording() {
+		try {
+			// Запрашиваем захват экрана
+			const recordStream = await navigator.mediaDevices.getDisplayMedia({
+				video: {
+					width: 1920,
+					height: 1080,
+					frameRate: 60
+				},
+				audio: false
+			});
+
+			// Настройки MediaRecorder
+			const options = {
+				mimeType: 'video/webm;codecs=vp9',
+				videoBitsPerSecond: 250000000 // 250 Mbps
+			};
+
+			const mediaRecorder = new MediaRecorder(recordStream, options);
+			const recordedChunks = [];
+
+			mediaRecorder.ondataavailable = (event) => {
+				if (event.data.size > 0) {
+					recordedChunks.push(event.data);
+				}
+			};
+
+			mediaRecorder.onstop = () => {
+				const blob = new Blob(recordedChunks, { type: 'video/webm' });
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = `track-${Date.now()}.webm`;
+				a.click();
+				URL.revokeObjectURL(url);
+
+				// Очищаем
+				recordStream.getTracks().forEach(track => track.stop());
+			};
+
+			// Начинаем запись
+			mediaRecorder.start();
+
+			// Ждем 2 секунды и автоматически начинаем анимацию
+			setTimeout(() => {
+				this.ui.showCountdown(() => this.animator.start());
+			}, 2000);
+
+			// Отслеживаем завершение анимации
+			const checkCompletion = setInterval(() => {
+				if (!this.animator.isRunning && this.animator.currentStep >= this.state.fullRoute.length) {
+					clearInterval(checkCompletion);
+					// Ждем еще 2 секунды после завершения
+					setTimeout(() => {
+						if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+							mediaRecorder.stop();
+						}
+					}, 2000);
+				}
+			}, 100);
+
+		} catch (error) {
+			console.error('Ошибка при записи видео:', error);
+			alert('Не удалось начать запись. Убедитесь, что выбрали правильную вкладку.');
+		}
 	}
 }
