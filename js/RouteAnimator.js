@@ -80,9 +80,8 @@ export class RouteAnimator {
 		const baseDelay = 50; // Базовая задержка в мс
 
 		// Конвертируем значение слайдера (-5 до +5) в реальную скорость
-		// Используем экспоненциальную функцию со смещением
-		// speed = -5 -> 0.25x, speed = 0 -> 4x, speed = 5 -> 64x
-		const actualSpeed = Math.pow(2, this.state.speed + 2);
+		// 0 на слайдере = 3x скорость (базовая)
+		const actualSpeed = Math.max(0.5, 3 + this.state.speed);
 
 		if (this.currentStep >= this.distances.length) {
 			return baseDelay / actualSpeed;
@@ -168,14 +167,16 @@ export class RouteAnimator {
 
 			this.map.once('moveend', () => {
 				this.map.off('move', onMove);
-				// Показываем контролы через 2 секунды после окончания анимации
+				// Ждём 2 секунды после окончания анимации
 				setTimeout(() => {
-					this.ui.showControls();
-
-					// Если есть коллбэк завершения - вызываем его
+					// Если есть коллбэк завершения (запись) - передаем ему управление
 					if (this.onCompleteCallback) {
-						this.onCompleteCallback();
+						// Передаем функцию показа контролов в callback
+						this.onCompleteCallback(() => this.ui.showControls());
 						this.onCompleteCallback = null;
+					} else {
+						// Обычная анимация - показываем контролы сразу
+						this.ui.showControls();
 					}
 				}, 2000);
 			});

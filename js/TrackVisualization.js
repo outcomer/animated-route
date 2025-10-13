@@ -415,10 +415,16 @@ export class TrackVisualization {
 			// Добавляем класс для скрытия курсора
 			document.body.classList.add('recording');
 
+			// Даем браузеру время применить CSS стили 16:9
+			await new Promise(resolve => setTimeout(resolve, 100));
+
+			// Пересчитываем размеры карты после изменения размеров контейнера
+			this.map.invalidateSize();
+
 			// Настройки MediaRecorder
 			const options = {
 				mimeType: 'video/webm;codecs=av1',
-				videoBitsPerSecond: 250000000
+				videoBitsPerSecond: 200000000 // 200 Mbps вместо 250 Mbps
 			};
 
 			const mediaRecorder = new MediaRecorder(recordStream, options);
@@ -462,12 +468,23 @@ export class TrackVisualization {
 			mediaRecorder.start();
 
 			// Устанавливаем коллбэк на завершение анимации
-			this.animator.onCompleteCallback = async () => {
+			this.animator.onCompleteCallback = async (showControlsCallback) => {
 				// Ждём 2 секунды после окончания анимации
 				await new Promise(resolve => setTimeout(resolve, 2000));
 
+				// Останавливаем запись
 				if (mediaRecorder && mediaRecorder.state !== 'inactive') {
 					mediaRecorder.stop();
+
+					// Ждём завершения onstop перед показом контролов
+					await new Promise(resolve => {
+						mediaRecorder.addEventListener('stop', resolve, { once: true });
+					});
+
+					// Показываем контролы ПОСЛЕ завершения записи
+					if (showControlsCallback) {
+						showControlsCallback();
+					}
 				}
 			};
 
