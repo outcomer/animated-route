@@ -1,17 +1,20 @@
-# Animated Route Visualization
+# GPX Route Viewer
 
-Interactive GPX track visualization with smooth animation on a map using Leaflet.js.
+Interactive GPX track visualization with smooth animation on a map using Leaflet.js. Features built-in video recording and automatic data persistence.
 
 ## Features
 
 - 🗺️ Beautiful route animation with customizable speed
 - 📊 Automatic metrics calculation (distance, elevation, calories, time)
+- 📁 Upload GPX files through UI (no configuration needed)
+- 💾 Automatic data persistence in localStorage
+- 🎬 Built-in video recording (no external tools required)
 - 🎨 Multiple map tile styles (OSM, CartoDB, Satellite, etc.)
-- ⏯️ Playback controls (play, pause, reset)
-- 🎬 Video recording capability with Puppeteer
 - 📍 Start/finish markers
 - 🎯 Auto-follow camera during animation
-- 💨 Adaptive speed control (1x-30x)
+- 💨 Adjustable speed (-5 to +5 multiplier)
+- 🔍 Configurable animation zoom level
+- ⚖️ Customizable weight for calorie calculation
 
 ## Quick Start
 
@@ -23,37 +26,9 @@ git clone https://github.com/outcomer/animated-route.git
 cd animated-route
 ```
 
-### 2. Add Your GPX Track
+### 2. Run
 
-Place your GPX file in the `tracks/` folder (create it if it doesn't exist):
-```bash
-mkdir tracks
-# Copy your GPX file
-cp /path/to/your-track.gpx tracks/
-```
-
-### 3. Configure
-
-Edit `track.html` and update the `state` object:
-
-```javascript
-const state = {
-    title: 'Your Route Name',
-    gpxPath: 'tracks/your-track.gpx',  // Path to your GPX file
-    weight: 79,                          // Your weight in kg (for calorie calculation)
-    speed: 4,                            // Animation speed (1-30x)
-    trackColor: 'rgb(0 0 0)',           // Track line color
-    mapTileUrl: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    initialZoom: 12,                     // Initial map zoom level
-    routeZoom: 16,                       // Zoom level after GPX loads
-    fullRoute: [],
-    gpxData: null
-};
-```
-
-### 4. Run
-
-Start a local web server (required for loading GPX files):
+Start a local web server:
 
 **Python 3:**
 ```bash
@@ -70,11 +45,67 @@ npx http-server -p 8000
 php -S localhost:8000
 ```
 
-Then open: http://localhost:8000/track.html
+Then open: http://localhost:8000
 
-## Map Tile Options
+### 3. Load GPX File
 
-Uncomment your preferred map style in `track.html`:
+1. Click **📁 Load GPX** button
+2. Select your GPX file
+3. Track will be displayed automatically
+4. All data is saved to localStorage
+
+That's it! No configuration files to edit.
+
+## Controls
+
+- **📁 Load GPX** - Upload a GPX track file
+- **🗑️** - Delete currently loaded track
+- **▶ Start animation** - Begin route playback with 3-2-1 countdown
+- **⏺ Record animation** - Record animation to video file
+- **Speed slider** - Adjust animation speed (-5 to +5)
+- **Start zoom slider** - Set zoom level for animation (12-18)
+- **Weight input** - Set your weight in kg for calorie calculation (40-150)
+
+## Video Recording
+
+Record your animation directly in the browser:
+
+1. Load a GPX track
+2. Click **⏺ Record animation**
+3. Select the browser tab to record
+4. Animation starts automatically in fullscreen
+5. Video downloads when complete
+
+**Features:**
+- AV1 codec with high bitrate (250 Mbps)
+- Up to 4K resolution (3840x2160)
+- 120 FPS capture
+- Automatic filename based on GPX file name
+- Cursor hidden during recording
+
+**Note:** Recording requires modern browser with MediaRecorder API support (Chrome/Edge recommended).
+
+## Configuration
+
+Edit `js/track.js` to customize defaults:
+
+```javascript
+const state = {
+    title: 'GPX Route Viewer',// Page title
+    speed: 0,                 // Default speed slider value (-5 to +5)
+    animationIntensity: 1.5,  // Animation easing intensity
+    trackColor: 'rgb(0 0 0)', // Track line color
+    mapTileUrl: '...',        // Map tile provider URL
+    initialZoom: 12,          // Initial map zoom
+    routeZoom: 16,            // Animation zoom level
+    fullRoute: [],            // Populated on GPX load
+    gpxData: null             // Populated on GPX load
+};
+```
+
+### Map Tile Options
+
+Uncomment your preferred map style in `js/track.js`:
 
 ```javascript
 // Light theme (default)
@@ -93,52 +124,29 @@ mapTileUrl: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
 // mapTileUrl: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
 ```
 
-## Controls
+### Default Weight
 
-- **▶ Start animation** - Begin route playback with 3-2-1 countdown
-- **⏸ Pause / ▶ Continue** - Pause/resume animation
-- **↻ Reset** - Return to start position
-- **Speed slider** - Adjust animation speed (1x-30x)
+Edit `js/TrackVisualization.js`:
 
-## Video Recording
-
-Record your animation to MP4 video:
-
-### Install Dependencies
-
-```bash
-npm install puppeteer puppeteer-screen-recorder
+```javascript
+const DEFAULT_WEIGHT = 80; // kg
 ```
-
-### Configure Recording
-
-Edit `record-video.js` if needed:
-- Change FPS (default: 50)
-- Adjust viewport size
-- Modify wait times
-
-### Record
-
-```bash
-node record-video.js
-```
-
-Output: `track-animation.mp4` in the same directory
-
-**Note:** Make sure the local web server is running on `http://localhost:8000`
 
 ## Project Structure
 
 ```
-animated-route/
-├── track.html          # Main HTML file with configuration
-├── track.js            # Animation logic and route rendering
-├── track.css           # Styles
-├── record-video.js     # Puppeteer video recording script
-├── tracks/             # GPX files (gitignored)
-│   └── your-track.gpx
+me-animated-route/
+├── index.html              # Main HTML file
+├── js/
+│   ├── track.js            # Main entry point & configuration
+│   ├── TrackVisualization.js  # Core application logic
+│   ├── UIController.js     # UI controls handler
+│   ├── RouteAnimator.js    # Animation engine
+│   └── GPXMetrics.js       # Metrics calculation
+├── css/
+│   └── track.css           # Styles
+├── favicon.svg             # App icon
 ├── .gitignore
-├── .gitattributes
 └── README.md
 ```
 
@@ -155,54 +163,100 @@ The app automatically calculates and displays:
   - Body weight
   - Elevation gain
 
+## Data Persistence
+
+All data is automatically saved to localStorage:
+
+- **GPX file content** - Track data
+- **GPX file name** - For display and video naming
+- **Weight** - User's weight setting
+
+Storage key format: `{hostname}_appData`
+
+Examples:
+- `localhost_appData`
+- `example.com_appData`
+
+## Technical Details
+
+### Architecture
+
+- **ES6 Modules** - Modular code organization
+- **Leaflet.js** - Map rendering and interaction
+- **MediaRecorder API** - In-browser video capture
+- **FileReader API** - GPX file loading
+- **localStorage** - Data persistence
+
+### Browser Requirements
+
+- Modern browser with:
+  - ES6 module support
+  - MediaRecorder API (for video recording)
+  - FileReader API (for GPX upload)
+  - Fullscreen API (for recording)
+
+### Tested On
+
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+
 ## Customization
 
 ### Change Track Color
+
+Edit `js/track.js`:
 
 ```javascript
 trackColor: 'rgb(255 0 0)',  // Red track
 ```
 
-### Adjust Animation Speed
+### Adjust Animation Behavior
 
-The speed parameter affects:
-- How fast the track is drawn
-- How quickly the camera follows
-
-Values: 1 (slowest) to 30 (fastest)
-
-### Modify Marker Labels
-
-Edit in `track.js`:
+Edit `js/track.js`:
 
 ```javascript
-addMarkers(points) {
-    L.marker([points[0].lat, points[0].lng], { icon: this.startIcon })
-        .addTo(this.map)
-        .bindPopup('<b>Start</b><br>Your Location');
-
-    L.marker([points[points.length - 1].lat, points[points.length - 1].lng], { icon: this.endIcon })
-        .addTo(this.map)
-        .bindPopup('<b>Finish</b><br>Your Destination');
-}
+animationIntensity: 1.5,  // 1.0 = linear, 2.0 = strong easing, 0.5 = weak easing
 ```
 
-## Requirements
+### Modify Marker Icons
 
-- Modern web browser with JavaScript enabled
-- Local web server (for loading GPX files via AJAX)
-- GPX file with track points (`<trkpt>` elements)
+Edit `js/TrackVisualization.js` in the `initMap()` method to change marker URLs or styles.
 
-Optional for video recording:
-- Node.js
-- Puppeteer
+## Tips
 
-## Browser Compatibility
+### Getting GPX Files
 
-Tested on:
-- Chrome/Edge 90+
-- Firefox 88+
-- Safari 14+
+1. Export from fitness apps (Strava, Garmin Connect, Komoot, etc.)
+2. Record with GPS tracking apps
+3. Create custom routes with [GPX Studio](https://gpx.studio/)
+
+### Performance
+
+- Animation optimized for routes up to 1000 points
+- Large files (>5MB) may exceed localStorage limits
+- Simplify tracks in GPX editors if needed
+
+### Troubleshooting
+
+**GPX file not loading:**
+- Must use local web server (not `file://` protocol)
+- Check browser console for errors
+- Ensure GPX file is valid XML with `<trkpt>` elements
+
+**localStorage quota exceeded:**
+- Large GPX files may exceed 5-10MB browser limit
+- Simplify track or use smaller GPX files
+
+**Video recording not working:**
+- Ensure browser supports MediaRecorder with AV1
+- Select the correct browser tab when prompted
+- Check browser permissions for screen capture
+
+**Animation stuttering:**
+- Reduce route point count
+- Lower recording FPS expectations
+- Close other browser tabs
 
 ## License
 
@@ -217,38 +271,6 @@ Pull requests are welcome! For major changes, please open an issue first.
 - [Leaflet.js](https://leafletjs.com/) - Interactive map library
 - [OpenStreetMap](https://www.openstreetmap.org/) - Map data
 - [CartoDB](https://carto.com/basemaps/) - Map tiles
-- [Puppeteer](https://pptr.dev/) - Video recording
-
-## Tips
-
-### Getting GPX Files
-
-1. Export from your GPS device or fitness app (Strava, Garmin, etc.)
-2. Record a new track with GPS tracking apps
-3. Create custom routes with [GPX Studio](https://gpx.studio/)
-
-### Performance
-
-- For long routes (1000+ points), animation may slow down
-- Consider simplifying GPX track in GPX editors
-- Lower FPS in `record-video.js` if recording stutters
-
-### Troubleshooting
-
-**Animation not starting:**
-- Check browser console for errors
-- Ensure web server is running
-- Verify GPX file path in configuration
-
-**GPX file not loading:**
-- Must use local web server (not `file://` protocol)
-- Check CORS if using external server
-- Validate GPX file format
-
-**Video recording issues:**
-- Ensure localhost:8000 is accessible
-- Check Puppeteer installation
-- Increase timeout values if animation is long
 
 ## Support
 

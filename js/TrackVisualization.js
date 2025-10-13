@@ -202,7 +202,6 @@ export class TrackVisualization {
 
 			this.ui.updateInfoBox({
 				title: this.state.title,
-				date: this.state.date,
 				distance: distance,
 				elevation: elevation,
 				movingSpeed: movingSpeed,

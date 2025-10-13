@@ -75,7 +75,6 @@ export class UIController {
 	updateInfoBox(data) {
 		this.infoBox.innerHTML = `
 			<h2>${data.title}</h2>
-			<p><strong>Date:</strong> ${data.date}</p>
 			<p><strong>Distance:</strong> ${data.distance.toFixed(2)} km</p>
 			<p><strong>Elevation, m (gain/loss):</strong> ${Math.round(data.elevation.gain)} / ${Math.round(data.elevation.loss)}</p>
 			<p><strong>Speed, km/h (moving/total):</strong> ${data.movingSpeed} / ${data.totalSpeed}</p>
