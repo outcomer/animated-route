@@ -205,11 +205,19 @@ export class TrackVisualization {
 	}
 
 	async startAnimation() {
-		// Сначала убираем полную линию маршрута и инфобокс
+		// Сбрасываем состояние аниматора
+		if (this.animator.animatedLine) {
+			this.map.removeLayer(this.animator.animatedLine);
+			this.animator.animatedLine = null;
+		}
+		this.animator.currentStep = 0;
+
+		// Убираем полную линию маршрута и инфобокс
 		if (this.fullRouteLine) {
 			this.map.removeLayer(this.fullRouteLine);
 		}
 		this.ui.hideInfoBox();
+		this.ui.clearProgress();
 
 		// Центрируем карту на точке старта
 		const startPoint = this.state.fullRoute[0];
