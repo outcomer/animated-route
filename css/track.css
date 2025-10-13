@@ -171,6 +171,27 @@ button:disabled {
 	width: 100%;
 }
 
+/* Weight control */
+.weight-control {
+	margin-top: 10px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+}
+
+.weight-control input {
+	width: 60px;
+	padding: 4px 8px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 14px;
+}
+
+.weight-control #weightLabel {
+	display: none;
+}
+
 /* Progress indicator */
 .progress {
 	margin-top: 10px;

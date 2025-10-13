@@ -2,6 +2,10 @@ import { GPXMetrics } from './GPXMetrics.js';
 import { UIController } from './UIController.js';
 import { RouteAnimator } from './RouteAnimator.js';
 
+// Дефолтные значения
+const DEFAULT_WEIGHT = 80; // кг
+const STORAGE_KEY = `${window.location.hostname}_appData`;
+
 // Главный класс приложения
 export class TrackVisualization {
 	constructor(state) {
@@ -11,7 +15,8 @@ export class TrackVisualization {
 		this.ui.initSpeed(this.state.speed); // Инициализируем ползунок скорости
 		this.ui.initZoom(this.state.routeZoom); // Инициализируем ползунок зума
 		this.animator = new RouteAnimator(this.map, this.state, this.ui, this);
-		this.loadGPX();
+		this.initAppData(); // Инициализируем структуру данных
+		this.loadInitialData(); // Загружаем сохраненные данные приложения
 		this.attachEventListeners();
 	}
 
@@ -49,27 +54,88 @@ export class TrackVisualization {
 		});
 	}
 
-	async loadGPX() {
+	// Инициализация структуры данных приложения
+	initAppData() {
 		try {
-			// Проверяем, есть ли сохраненный GPX в localStorage
-			const savedGPX = localStorage.getItem('uploadedGPX');
-			const savedFileName = localStorage.getItem('uploadedGPXFileName');
+			const appDataStr = localStorage.getItem(STORAGE_KEY);
+			if (!appDataStr) {
+				const defaultData = {
+					gpx: null,
+					gpxFileName: null,
+					weight: DEFAULT_WEIGHT
+				};
+				localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+			}
+		} catch (error) {
+			console.error('Error initializing app data:', error);
+		}
+	}
 
-			if (savedGPX) {
-				this.parseAndDisplayGPX(savedGPX);
-				if (savedFileName) {
-					this.ui.gpxFileName.textContent = `📄 ${savedFileName}`;
-				}
+	// Загрузка данных: loadAppData() - все данные, loadAppData('weight') - только weight
+	loadAppData(option = null) {
+		try {
+			const appDataStr = localStorage.getItem(STORAGE_KEY);
+			if (!appDataStr) return null;
+
+			const appData = JSON.parse(appDataStr);
+
+			// Если указана конкретная опция, возвращаем только её
+			if (option) {
+				return appData[option];
+			}
+
+			// Иначе возвращаем все данные
+			return appData;
+		} catch (error) {
+			console.error('Error loading app data:', error);
+			return null;
+		}
+	}
+
+	// Сохранение данных: saveAppData('weight', value) - сохраняет конкретное поле
+	saveAppData(option, value) {
+		try {
+			const appDataStr = localStorage.getItem(STORAGE_KEY);
+			const appData = appDataStr ? JSON.parse(appDataStr) : {
+				gpx: null,
+				gpxFileName: null,
+				weight: DEFAULT_WEIGHT
+			};
+
+			appData[option] = value;
+
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+		} catch (error) {
+			console.error('Error saving app data:', error);
+		}
+	}
+
+	// Загрузка данных приложения при старте
+	loadInitialData() {
+		try {
+			const appData = this.loadAppData();
+			if (!appData) {
+				this.ui.gpxFileName.textContent = 'No track loaded';
+				this.ui.deleteGpxBtn.classList.remove('visible');
+				return;
+			}
+
+			// Загружаем настройки
+			const weight = appData.weight || DEFAULT_WEIGHT;
+			this.ui.initWeight(weight);
+
+			// Загружаем GPX если есть
+			if (appData.gpx && appData.gpxFileName) {
+				this.parseAndDisplayGPX(appData.gpx);
+				this.ui.gpxFileName.textContent = `📄 ${appData.gpxFileName}`;
 				this.ui.deleteGpxBtn.classList.add('visible');
-				console.log('Loaded GPX from localStorage');
+				console.log('Loaded app data from localStorage');
 			} else {
-				// Нет сохраненного GPX - показываем пустую карту
-				console.log('No GPX found. Please upload a GPX file.');
 				this.ui.gpxFileName.textContent = 'No track loaded';
 				this.ui.deleteGpxBtn.classList.remove('visible');
 			}
 		} catch (error) {
-			console.error('Error loading GPX:', error);
+			console.error('Error loading initial data:', error);
 		}
 	}
 
@@ -131,7 +197,8 @@ export class TrackVisualization {
 		if (timeData) {
 			const movingSpeed = (distance / (timeData.movingTime / 3600)).toFixed(2);
 			const totalSpeed = (distance / (timeData.totalTime / 3600)).toFixed(2);
-			const calories = GPXMetrics.calculateCalories(distance, timeData.movingTime, elevation.gain, this.state.weight);
+			const weight = this.loadAppData('weight') || DEFAULT_WEIGHT;
+			const calories = GPXMetrics.calculateCalories(distance, timeData.movingTime, elevation.gain, weight);
 
 			this.ui.updateInfoBox({
 				title: this.state.title,
@@ -178,6 +245,16 @@ export class TrackVisualization {
 		this.ui.zoomSlider.addEventListener('input', (e) => {
 			this.state.routeZoom = parseInt(e.target.value);
 			this.ui.updateZoomLabel(this.state.routeZoom);
+		});
+
+		this.ui.weightInput.addEventListener('input', (e) => {
+			const weight = parseInt(e.target.value);
+			// Сохраняем изменение веса
+			this.saveAppData('weight', weight);
+			// Пересчитываем метрики если трек загружен
+			if (this.state.fullRoute && this.state.fullRoute.length > 0) {
+				this.calculateAndDisplayMetrics(this.state.fullRoute);
+			}
 		});
 
 		if (this.ui.recordBtn) {
@@ -246,11 +323,11 @@ export class TrackVisualization {
 		reader.onload = (e) => {
 			const gpxText = e.target.result;
 
-			// Сохраняем в localStorage
+			// Сохраняем GPX в localStorage
 			try {
-				localStorage.setItem('uploadedGPX', gpxText);
-				localStorage.setItem('uploadedGPXFileName', file.name);
-				console.log('GPX saved to localStorage');
+				this.saveAppData('gpx', gpxText);
+				this.saveAppData('gpxFileName', file.name);
+				console.log('App data saved to localStorage');
 			} catch (error) {
 				console.error('Error saving to localStorage:', error);
 				alert('File too large to save locally');
@@ -278,9 +355,9 @@ export class TrackVisualization {
 			return;
 		}
 
-		// Удаляем из localStorage
-		localStorage.removeItem('uploadedGPX');
-		localStorage.removeItem('uploadedGPXFileName');
+		// Удаляем GPX из appData, но оставляем настройки
+		this.saveAppData('gpx', null);
+		this.saveAppData('gpxFileName', null);
 
 		// Очищаем карту
 		if (this.startMarker) this.map.removeLayer(this.startMarker);
@@ -354,8 +431,8 @@ export class TrackVisualization {
 				const a = document.createElement('a');
 				a.href = url;
 
-				// Формируем имя файла из имени трека
-				const gpxFileName = localStorage.getItem('uploadedGPXFileName') || 'track';
+				// Формируем имя файла из имени трека из appData
+				const gpxFileName = this.loadAppData('gpxFileName') || 'track';
 				const baseName = gpxFileName.replace(/\.gpx$/i, '');
 				a.download = `track-${baseName}.webm`;
 

@@ -10,6 +10,7 @@ export class UIController {
 		this.speedLabel = document.getElementById('speedLabel');
 		this.zoomSlider = document.getElementById('zoomSlider');
 		this.zoomLabel = document.getElementById('zoomLabel');
+		this.weightInput = document.getElementById('weightInput');
 		this.gpxFileInput = document.getElementById('gpxFile');
 		this.gpxFileName = document.getElementById('gpxFileName');
 		this.deleteGpxBtn = document.getElementById('deleteGpxBtn');
@@ -103,5 +104,9 @@ export class UIController {
 	initZoom(zoom) {
 		this.zoomSlider.value = zoom;
 		this.updateZoomLabel(zoom);
+	}
+
+	initWeight(weight) {
+		this.weightInput.value = weight;
 	}
 }
