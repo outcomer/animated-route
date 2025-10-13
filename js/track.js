@@ -5,7 +5,6 @@ import { TrackVisualization } from './TrackVisualization.js';
 const state = {
 	// Основные параметры
 	title: 'GPX Route Viewer',
-
 	// Настройки визуализации
 	speed: 0, // Значение слайдера (-5 до +5, где 0 = базовая скорость)
 	animationIntensity: 1.5, // Сила эффекта замедления (1.0 = линейно, 2.0 = сильно, 0.5 = слабо)

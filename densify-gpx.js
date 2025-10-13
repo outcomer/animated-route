@@ -1,126 +1,211 @@
-// Скрипт для насыщения точками дорисованной части GPX трека
-const fs = require('fs');
+import { readFileSync, writeFileSync } from 'fs';
+import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 
-// Haversine формула для расчета расстояния
 function calculateDistance(lat1, lon1, lat2, lon2) {
-	const R = 6371; // Радиус Земли в км
-	const dLat = (lat2 - lat1) * Math.PI / 180;
-	const dLon = (lon2 - lon1) * Math.PI / 180;
-	const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-		Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-		Math.sin(dLon / 2) * Math.sin(dLon / 2);
+	const R = 6371e3;
+	const φ1 = lat1 * Math.PI / 180;
+	const φ2 = lat2 * Math.PI / 180;
+	const Δφ = (lat2 - lat1) * Math.PI / 180;
+	const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+	const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+		Math.cos(φ1) * Math.cos(φ2) *
+		Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
 	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-	return R * c; // расстояние в км
+
+	return R * c;
 }
 
-// Интерполяция между двумя точками
-function interpolatePoints(point1, point2, numPoints) {
-	const points = [];
+function interpolatePoints(pt1, pt2, numPoints) {
+	const result = [];
+	const lat1 = parseFloat(pt1.getAttribute('lat'));
+	const lon1 = parseFloat(pt1.getAttribute('lon'));
+	const lat2 = parseFloat(pt2.getAttribute('lat'));
+	const lon2 = parseFloat(pt2.getAttribute('lon'));
+
+	const ele1 = parseFloat(pt1.getElementsByTagName('ele')[0]?.textContent || 0);
+	const ele2 = parseFloat(pt2.getElementsByTagName('ele')[0]?.textContent || 0);
+
+	const time1 = new Date(pt1.getElementsByTagName('time')[0]?.textContent);
+	const time2 = new Date(pt2.getElementsByTagName('time')[0]?.textContent);
+	const timeDiff = time2 - time1;
+
 	for (let i = 1; i <= numPoints; i++) {
-		const ratio = i / (numPoints + 1);
-		points.push({
-			lat: point1.lat + (point2.lat - point1.lat) * ratio,
-			lon: point1.lon + (point2.lon - point1.lon) * ratio,
-			ele: point1.ele + (point2.ele - point1.ele) * ratio,
-			time: point1.time // упрощенно, можно интерполировать время
+		const t = i / (numPoints + 1);
+		const lat = lat1 + (lat2 - lat1) * t;
+		const lon = lon1 + (lon2 - lon1) * t;
+		const ele = ele1 + (ele2 - ele1) * t;
+		const time = new Date(time1.getTime() + timeDiff * t);
+
+		result.push({
+			lat: lat.toFixed(6),
+			lon: lon.toFixed(6),
+			ele: ele.toFixed(1),
+			time: time.toISOString()
 		});
 	}
-	return points;
+
+	return result;
 }
 
-// Читаем и парсим GPX
-const gpxContent = fs.readFileSync('tracks/karlstein.gpx', 'utf-8');
-const trkptRegex = /<trkpt lat="([^"]+)" lon="([^"]+)">\s*<ele>([^<]+)<\/ele>\s*(?:<time>([^<]+)<\/time>)?/g;
+const gpxPath = 'tracks/karlstein.gpx';
+const outputPath = 'tracks/karlstein-densified.gpx';
 
-const points = [];
-let match;
-while ((match = trkptRegex.exec(gpxContent)) !== null) {
-	points.push({
-		lat: parseFloat(match[1]),
-		lon: parseFloat(match[2]),
-		ele: parseFloat(match[3]),
-		time: match[4] || null
-	});
-}
+console.log('Reading GPX file...');
+const gpxContent = readFileSync(gpxPath, 'utf-8');
+const parser = new DOMParser();
+const doc = parser.parseFromString(gpxContent, 'text/xml');
 
-console.log(`Всего точек: ${points.length}`);
+const trkpts = Array.from(doc.getElementsByTagName('trkpt'));
+console.log('Total points: ' + trkpts.length);
 
-// Находим индекс точки разделения (примерно 49.960586, 14.197579)
-const splitLat = 49.960586;
-const splitLon = 14.197579;
-let splitIndex = 0;
-let minDistance = Infinity;
+const targetLat = '49.960922';
+const targetLon = '14.199798';
+let splitIndex = -1;
 
-for (let i = 0; i < points.length; i++) {
-	const dist = calculateDistance(splitLat, splitLon, points[i].lat, points[i].lon);
-	if (dist < minDistance) {
-		minDistance = dist;
+for (let i = 0; i < trkpts.length; i++) {
+	const lat = trkpts[i].getAttribute('lat');
+	const lon = trkpts[i].getAttribute('lon');
+	if (lat === targetLat && lon === targetLon) {
 		splitIndex = i;
+		break;
 	}
 }
 
-console.log(`Найдена точка разделения на индексе ${splitIndex}`);
-console.log(`Координаты: ${points[splitIndex].lat}, ${points[splitIndex].lon}`);
-console.log(`Расстояние от указанной точки: ${(minDistance * 1000).toFixed(2)}м`);
-
-// Рассчитываем среднее расстояние в первой части (реальный трек)
-const realPart = points.slice(0, splitIndex);
-let totalDistance = 0;
-for (let i = 1; i < realPart.length; i++) {
-	totalDistance += calculateDistance(
-		realPart[i - 1].lat, realPart[i - 1].lon,
-		realPart[i].lat, realPart[i].lon
-	);
+if (splitIndex === -1) {
+	console.error('Target point not found!');
+	process.exit(1);
 }
-const avgDistance = totalDistance / (realPart.length - 1);
-console.log(`Среднее расстояние в реальной части: ${(avgDistance * 1000).toFixed(2)}м`);
 
-// Обрабатываем вторую часть (дорисованная)
-const drawnPart = points.slice(splitIndex);
-const densifiedPart = [drawnPart[0]]; // Начинаем с точки разделения
+console.log('Found target point at index: ' + splitIndex + ' (' + ((splitIndex / trkpts.length) * 100).toFixed(1) + '% of track)');
 
-for (let i = 1; i < drawnPart.length; i++) {
-	const dist = calculateDistance(
-		drawnPart[i - 1].lat, drawnPart[i - 1].lon,
-		drawnPart[i].lat, drawnPart[i].lon
-	);
+let totalDistanceBefore = 0;
+for (let i = 1; i <= splitIndex; i++) {
+	const lat1 = parseFloat(trkpts[i - 1].getAttribute('lat'));
+	const lon1 = parseFloat(trkpts[i - 1].getAttribute('lon'));
+	const lat2 = parseFloat(trkpts[i].getAttribute('lat'));
+	const lon2 = parseFloat(trkpts[i].getAttribute('lon'));
+	totalDistanceBefore += calculateDistance(lat1, lon1, lat2, lon2);
+}
+const avgDistanceBefore = totalDistanceBefore / splitIndex;
 
-	// Сколько точек нужно добавить между текущими точками
-	const numPointsToAdd = Math.floor(dist / avgDistance) - 1;
+let totalDistanceAfter = 0;
+for (let i = splitIndex + 1; i < trkpts.length; i++) {
+	const lat1 = parseFloat(trkpts[i - 1].getAttribute('lat'));
+	const lon1 = parseFloat(trkpts[i - 1].getAttribute('lon'));
+	const lat2 = parseFloat(trkpts[i].getAttribute('lat'));
+	const lon2 = parseFloat(trkpts[i].getAttribute('lon'));
+	totalDistanceAfter += calculateDistance(lat1, lon1, lat2, lon2);
+}
+const avgDistanceAfter = totalDistanceAfter / (trkpts.length - splitIndex - 1);
 
-	if (numPointsToAdd > 0) {
-		// Добавляем интерполированные точки
-		const interpolated = interpolatePoints(drawnPart[i - 1], drawnPart[i], numPointsToAdd);
-		densifiedPart.push(...interpolated);
+console.log('Average distance before split: ' + avgDistanceBefore.toFixed(2) + ' m');
+console.log('Average distance after split: ' + avgDistanceAfter.toFixed(2) + ' m');
+
+// Анализируем распределение расстояний
+const distancesBefore = [];
+for (let i = 1; i <= splitIndex; i++) {
+	const lat1 = parseFloat(trkpts[i - 1].getAttribute('lat'));
+	const lon1 = parseFloat(trkpts[i - 1].getAttribute('lon'));
+	const lat2 = parseFloat(trkpts[i].getAttribute('lat'));
+	const lon2 = parseFloat(trkpts[i].getAttribute('lon'));
+	distancesBefore.push(calculateDistance(lat1, lon1, lat2, lon2));
+}
+
+const distancesAfter = [];
+for (let i = splitIndex + 1; i < trkpts.length; i++) {
+	const lat1 = parseFloat(trkpts[i - 1].getAttribute('lat'));
+	const lon1 = parseFloat(trkpts[i - 1].getAttribute('lon'));
+	const lat2 = parseFloat(trkpts[i].getAttribute('lat'));
+	const lon2 = parseFloat(trkpts[i].getAttribute('lon'));
+	distancesAfter.push(calculateDistance(lat1, lon1, lat2, lon2));
+}
+
+const maxBefore = Math.max(...distancesBefore);
+const maxAfter = Math.max(...distancesAfter);
+const segmentsOver30mBefore = distancesBefore.filter(d => d > 30).length;
+const segmentsOver30mAfter = distancesAfter.filter(d => d > 30).length;
+
+console.log('\nDistribution analysis:');
+console.log('Max distance before: ' + maxBefore.toFixed(2) + ' m');
+console.log('Max distance after: ' + maxAfter.toFixed(2) + ' m');
+console.log('Segments >30m before: ' + segmentsOver30mBefore + ' (' + ((segmentsOver30mBefore / distancesBefore.length) * 100).toFixed(1) + '%)');
+console.log('Segments >30m after: ' + segmentsOver30mAfter + ' (' + ((segmentsOver30mAfter / distancesAfter.length) * 100).toFixed(1) + '%)');
+
+const densityRatio = avgDistanceAfter / avgDistanceBefore;
+console.log('\nDensity ratio (after/before): ' + densityRatio.toFixed(2) + 'x');
+
+// Определяем целевое расстояние для интерполяции
+const overallAvg = (totalDistanceBefore + totalDistanceAfter) / (trkpts.length - 1);
+const targetDistance = overallAvg * 1.5; // Интерполируем сегменты длиннее 1.5x от среднего
+
+console.log('\nTarget distance for interpolation: ' + targetDistance.toFixed(2) + ' m');
+console.log('Will interpolate segments longer than this threshold.\n');
+
+console.log('Building densified track...');
+const newPoints = [];
+
+// Обрабатываем ВСЕ точки с интерполяцией длинных сегментов
+for (let i = 0; i < trkpts.length; i++) {
+	const pt1 = trkpts[i];
+
+	newPoints.push({
+		lat: pt1.getAttribute('lat'),
+		lon: pt1.getAttribute('lon'),
+		ele: pt1.getElementsByTagName('ele')[0]?.textContent || '0',
+		time: pt1.getElementsByTagName('time')[0]?.textContent || ''
+	});
+
+	// Проверяем следующий сегмент
+	if (i < trkpts.length - 1) {
+		const pt2 = trkpts[i + 1];
+
+		const lat1 = parseFloat(pt1.getAttribute('lat'));
+		const lon1 = parseFloat(pt1.getAttribute('lon'));
+		const lat2 = parseFloat(pt2.getAttribute('lat'));
+		const lon2 = parseFloat(pt2.getAttribute('lon'));
+
+		const distance = calculateDistance(lat1, lon1, lat2, lon2);
+
+		// Интерполируем если сегмент длинный
+		if (distance > targetDistance) {
+			const numInterpPoints = Math.floor(distance / targetDistance);
+			const interpolated = interpolatePoints(pt1, pt2, numInterpPoints);
+			newPoints.push(...interpolated);
+		}
+	}
+}
+
+console.log('Original points: ' + trkpts.length);
+console.log('Densified points: ' + newPoints.length);
+console.log('Added ' + (newPoints.length - trkpts.length) + ' interpolated points');
+
+const trkseg = doc.getElementsByTagName('trkseg')[0];
+while (trkseg.firstChild) {
+	trkseg.removeChild(trkseg.firstChild);
+}
+
+for (const pt of newPoints) {
+	const trkpt = doc.createElement('trkpt');
+	trkpt.setAttribute('lat', pt.lat);
+	trkpt.setAttribute('lon', pt.lon);
+
+	const ele = doc.createElement('ele');
+	ele.textContent = pt.ele;
+	trkpt.appendChild(ele);
+
+	if (pt.time) {
+		const time = doc.createElement('time');
+		time.textContent = pt.time;
+		trkpt.appendChild(time);
 	}
 
-	densifiedPart.push(drawnPart[i]);
+	trkseg.appendChild(trkpt);
+	trkseg.appendChild(doc.createTextNode('\n    '));
 }
 
-console.log(`Точек в дорисованной части ДО: ${drawnPart.length}`);
-console.log(`Точек в дорисованной части ПОСЛЕ: ${densifiedPart.length}`);
+const serializer = new XMLSerializer();
+const newGpxContent = serializer.serializeToString(doc);
+writeFileSync(outputPath, newGpxContent);
 
-// Объединяем обе части
-const resultPoints = [...realPart, ...densifiedPart];
-console.log(`Всего точек в результате: ${resultPoints.length}`);
-
-// Генерируем новый GPX
-const gpxHeader = gpxContent.substring(0, gpxContent.indexOf('<trkpt'));
-const gpxFooter = gpxContent.substring(gpxContent.lastIndexOf('</trkseg>'));
-
-let trkptsXml = '';
-for (const point of resultPoints) {
-	trkptsXml += `    <trkpt lat="${point.lat.toFixed(6)}" lon="${point.lon.toFixed(6)}">\n`;
-	trkptsXml += `      <ele>${point.ele.toFixed(1)}</ele>\n`;
-	if (point.time) {
-		trkptsXml += `      <time>${point.time}</time>\n`;
-	}
-	trkptsXml += `    </trkpt>\n`;
-}
-
-const newGpx = gpxHeader + trkptsXml + gpxFooter;
-
-// Сохраняем результат
-fs.writeFileSync('tracks/karlstein-densified.gpx', newGpx, 'utf-8');
-console.log('\n✓ Создан файл tracks/karlstein-densified.gpx');
-console.log('Обновите gpxPath в track.html для использования нового файла');
+console.log('Densified GPX saved to: ' + outputPath);

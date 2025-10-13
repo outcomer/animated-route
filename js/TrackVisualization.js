@@ -286,6 +286,7 @@ export class TrackVisualization {
 			this.map.removeLayer(this.animator.animatedLine);
 			this.animator.animatedLine = null;
 		}
+		this.animator.clearSegments();
 		this.animator.currentStep = 0;
 
 		// Убираем полную линию маршрута и инфобокс
@@ -343,6 +344,7 @@ export class TrackVisualization {
 				this.map.removeLayer(this.animator.animatedLine);
 				this.animator.animatedLine = null;
 			}
+			this.animator.clearSegments();
 			this.animator.currentStep = 0;
 		};
 
@@ -369,6 +371,7 @@ export class TrackVisualization {
 			this.map.removeLayer(this.animator.animatedLine);
 			this.animator.animatedLine = null;
 		}
+		this.animator.clearSegments();
 
 		// Сбрасываем состояние
 		this.state.fullRoute = [];
@@ -387,9 +390,11 @@ export class TrackVisualization {
 	}
 
 	async startRecording() {
+		let recordStream = null;
+
 		try {
 			// Запрашиваем захват с выбором вкладки или окна (без Entire Screen)
-			const recordStream = await navigator.mediaDevices.getDisplayMedia({
+			recordStream = await navigator.mediaDevices.getDisplayMedia({
 				video: {
 					width: { ideal: 3840 },
 					height: { ideal: 2160 },
@@ -439,13 +444,15 @@ export class TrackVisualization {
 				a.click();
 				URL.revokeObjectURL(url);
 
-				// Очищаем
-				recordStream.getTracks().forEach(track => track.stop());
+				// Очищаем stream
+				if (recordStream) {
+					recordStream.getTracks().forEach(track => track.stop());
+				}
 
 				// Убираем класс recording
 				document.body.classList.remove('recording');
 
-				// Выходим из полноэкранного режима
+				// Выходим из fullscreen
 				if (document.fullscreenElement) {
 					document.exitFullscreen();
 				}
@@ -455,7 +462,10 @@ export class TrackVisualization {
 			mediaRecorder.start();
 
 			// Устанавливаем коллбэк на завершение анимации
-			this.animator.onCompleteCallback = () => {
+			this.animator.onCompleteCallback = async () => {
+				// Ждём 2 секунды после окончания анимации
+				await new Promise(resolve => setTimeout(resolve, 2000));
+
 				if (mediaRecorder && mediaRecorder.state !== 'inactive') {
 					mediaRecorder.stop();
 				}

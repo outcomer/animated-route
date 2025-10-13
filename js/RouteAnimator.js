@@ -10,11 +10,15 @@ export class RouteAnimator {
 		this.animationTimeout = null;
 		this.currentStep = 0;
 		this.animatedLine = null;
+		this.segments = []; // Массив отрисованных сегментов
 		this.isRunning = false;
 		this.distances = []; // Расстояния между точками
 		this.avgDistance = 0; // Среднее расстояние
 		this.smoothDistance = 0; // Сглаженное расстояние
 		this.smoothingAlpha = 0.75; // Коэффициент сглаживания (0.75 = 75% предыдущее, 25% новое)
+
+		// Canvas renderer для эффективной отрисовки
+		this.renderer = L.canvas();
 	}
 
 	// Предварительный расчет расстояний между точками
@@ -41,11 +45,20 @@ export class RouteAnimator {
 		this.ui.startBtn.disabled = true;
 		this.isRunning = true;
 
+		// Очищаем предыдущие сегменты
+		this.clearSegments();
+
 		// Предварительно рассчитываем расстояния
 		this.precalculateDistances();
 
 		// Запускаем первый шаг
 		this.scheduleNextStep();
+	}
+
+	clearSegments() {
+		// Удаляем все сегменты с карты
+		this.segments.forEach(segment => this.map.removeLayer(segment));
+		this.segments = [];
 	}
 
 	scheduleNextStep() {
@@ -67,8 +80,9 @@ export class RouteAnimator {
 		const baseDelay = 50; // Базовая задержка в мс
 
 		// Конвертируем значение слайдера (-5 до +5) в реальную скорость
-		// 0 на слайдере = 4x скорость (базовая)
-		const actualSpeed = Math.max(0.5, 4 + this.state.speed);
+		// Используем экспоненциальную функцию со смещением
+		// speed = -5 -> 0.25x, speed = 0 -> 4x, speed = 5 -> 64x
+		const actualSpeed = Math.pow(2, this.state.speed + 2);
 
 		if (this.currentStep >= this.distances.length) {
 			return baseDelay / actualSpeed;
@@ -90,12 +104,12 @@ export class RouteAnimator {
 		// intensity = 1.0 -> линейный эффект
 		// intensity > 1.0 -> усиленный эффект (более драматичная разница)
 		// intensity < 1.0 -> ослабленный эффект (менее заметная разница)
-		const intensity = this.state.animationIntensity || 1.0;
+		const intensity = this.state.animationIntensity;
 		normalizedDistance = Math.pow(normalizedDistance, intensity);
 
 		// Задержка обратно пропорциональна расстоянию
-		// Умножаем на speedMultiplier и ограничиваем минимум
-		const delay = Math.max(10, baseDelay / normalizedDistance / actualSpeed);
+		// Убираем Math.max чтобы не ограничивать скорость
+		const delay = Math.max(1, baseDelay / normalizedDistance / actualSpeed);
 
 		return delay;
 	}
@@ -107,26 +121,30 @@ export class RouteAnimator {
 			this.currentStep = this.state.fullRoute.length;
 		}
 
+		// Создаём coords из всех точек до текущей
 		const coords = this.state.fullRoute.slice(0, this.currentStep).map(p => [p.lat, p.lng]);
 
+		// Если линия уже существует - обновляем координаты
+		// Если нет - создаём новую
 		if (this.animatedLine) {
-			this.map.removeLayer(this.animatedLine);
+			this.animatedLine.setLatLngs(coords);
+		} else {
+			this.animatedLine = L.polyline(coords, {
+				color: this.state.trackColor,
+				weight: 4,
+				opacity: 0.8,
+				smoothFactor: 2.0,
+				renderer: this.renderer
+			}).addTo(this.map);
 		}
-
-		this.animatedLine = L.polyline(coords, {
-			color: this.state.trackColor,
-			weight: 4,
-			opacity: 0.8,
-			smoothFactor: 2.0
-		}).addTo(this.map);
 
 		const percent = Math.round((this.currentStep / this.state.fullRoute.length) * 100);
 		this.ui.updateProgress(percent);
 
-		// Плавное панорамирование
-		if (this.currentStep > 0) {
-			const point = this.state.fullRoute[this.currentStep - 1];
-			this.map.panTo([point.lat, point.lng], { animate: true });
+		// Плавное панорамирование к текущей точке
+		if (coords.length > 0) {
+			const lastPoint = coords[coords.length - 1];
+			this.map.panTo(lastPoint, { animate: true });
 		}
 	}
 
@@ -135,12 +153,16 @@ export class RouteAnimator {
 		this.ui.setProgressComplete();
 		this.ui.showInfoBox();
 
+		// Создаём финальную polyline из всех точек для bounds
+		const allCoords = this.state.fullRoute.map(p => [p.lat, p.lng]);
+		const finalLine = L.polyline(allCoords);
+
 		setTimeout(() => {
 			const onMove = () => this.map.fire('viewreset');
 			this.map.on('move', onMove);
 
-			this.map.flyToBounds(this.animatedLine.getBounds(), {
-				padding: [30, 30],
+			this.map.flyToBounds(finalLine.getBounds(), {
+				padding: [50, 50],
 				duration: 2.5
 			});
 
