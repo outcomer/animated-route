@@ -140,7 +140,7 @@ export class RouteAnimator {
 			this.map.on('move', onMove);
 
 			this.map.flyToBounds(this.animatedLine.getBounds(), {
-				padding: [0, 0],
+				padding: [30, 30],
 				duration: 2.5
 			});
 

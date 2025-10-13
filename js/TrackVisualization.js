@@ -393,6 +393,7 @@ export class TrackVisualization {
 				video: {
 					width: { ideal: 3840 },
 					height: { ideal: 2160 },
+					aspectRatio: { ideal: 16/9 },
 					frameRate: { max: 120, ideal: 120 }
 				},
 				audio: false,
