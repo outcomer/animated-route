@@ -78,17 +78,23 @@ export class RouteAnimator {
 
 	calculateDelay() {
 		const baseDelay = 50; // Базовая задержка в мс
+		const minDelay = 10; // Минимальная задержка для стабильной работы на мобильных (Android требует минимум 4ms)
 
 		// Конвертируем значение слайдера (-5 до +5) в реальную скорость
 		// 0 на слайдере = 3x скорость (базовая)
 		const actualSpeed = Math.max(0.5, 3 + this.state.speed);
 
-		if (this.currentStep >= this.distances.length) {
+		if (this.currentStep >= this.distances.length || !this.avgDistance || this.avgDistance === 0) {
 			return baseDelay / actualSpeed;
 		}
 
 		// Текущее расстояние до следующей точки
 		const currentDistance = this.distances[this.currentStep];
+
+		// Проверка на валидность данных
+		if (!currentDistance || isNaN(currentDistance)) {
+			return baseDelay / actualSpeed;
+		}
 
 		// Экспоненциальное сглаживание
 		this.smoothDistance = this.smoothingAlpha * this.smoothDistance +
@@ -99,6 +105,11 @@ export class RouteAnimator {
 		// Если расстояние меньше среднего -> была низкая скорость -> медленнее анимация
 		let normalizedDistance = this.smoothDistance / this.avgDistance;
 
+		// Проверка на валидность нормализованного расстояния
+		if (!normalizedDistance || isNaN(normalizedDistance) || normalizedDistance <= 0) {
+			normalizedDistance = 1.0;
+		}
+
 		// Применяем интенсивность эффекта через степенную функцию
 		// intensity = 1.0 -> линейный эффект
 		// intensity > 1.0 -> усиленный эффект (более драматичная разница)
@@ -107,8 +118,8 @@ export class RouteAnimator {
 		normalizedDistance = Math.pow(normalizedDistance, intensity);
 
 		// Задержка обратно пропорциональна расстоянию
-		// Убираем Math.max чтобы не ограничивать скорость
-		const delay = Math.max(1, baseDelay / normalizedDistance / actualSpeed);
+		// Минимум 10ms для стабильной работы на мобильных устройствах
+		const delay = Math.max(minDelay, baseDelay / normalizedDistance / actualSpeed);
 
 		return delay;
 	}
