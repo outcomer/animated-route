@@ -51,6 +51,37 @@ body.recording #map {
 	right: 20px;
 	background: white;
 	padding: 15px;
+	transition: all 0.3s ease;
+}
+
+.controls.collapsed {
+	padding: 8px;
+}
+
+.controls.collapsed .controls-content {
+	display: none;
+}
+
+.controls-content {
+	transition: opacity 0.3s ease;
+}
+
+.toggle-btn {
+	padding: 8px 12px !important;
+	margin: 0 0 10px 0 !important;
+	background: #666 !important;
+	font-size: 12px !important;
+	min-width: auto !important;
+	transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.toggle-btn:hover {
+	background: #555 !important;
+}
+
+.controls.collapsed .toggle-btn {
+	margin: 0 !important;
+	transform: rotate(180deg);
 }
 
 .info-box {
@@ -58,7 +89,7 @@ body.recording #map {
 	left: 30px;
 	background: rgba(255, 255, 255, 0.95);
 	padding: 20px;
-	max-width: 50vw;
+	max-width: 90vw;
 	transition: opacity 0.8s;
 }
 
@@ -95,7 +126,7 @@ button,
 
 button {
 	padding: 12px 24px;
-	margin: 5px;
+	margin-bottom: 10px;
 	background: #4285f4;
 	font-size: 16px;
 	display: block;
@@ -210,6 +241,26 @@ button:disabled {
 	display: none;
 }
 
+/* Densified track toggle */
+.densified-control {
+	margin-top: 10px;
+	font-size: 14px;
+}
+
+.densified-control label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	user-select: none;
+}
+
+.densified-control input[type="checkbox"] {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+}
+
 /* Progress indicator */
 .progress {
 	margin-top: 10px;
@@ -244,5 +295,13 @@ button:disabled {
 	100% {
 		transform: translate(-50%, -50%) scale(1);
 		opacity: 1;
+	}
+}
+
+/* Mobile devices - свернутая панель по умолчанию */
+@media (max-width: 768px) {
+	.info-box {
+		max-width: calc(100vw - 60px);
+		font-size: 14px;
 	}
 }

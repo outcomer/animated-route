@@ -13,13 +13,15 @@
 <body>
 	<div id="map"></div>
 	<div class="controls">
-		<button id="startBtn">▶ Start animation</button>
-		<button id="recordBtn">⏺ Record animation</button>
+		<button id="toggleControlsBtn" class="toggle-btn" title="Collapse/Expand">▲</button>
+		<div class="controls-content">
+			<button id="startBtn">▶ Start animation</button>
+			<button id="recordBtn">⏺ Record animation</button>
 		<div class="speed-control">
 			<label>
 				Speed: <span id="speedLabel"></span>
 			</label>
-			<input type="range" id="speedSlider" min="-5" max="5" step="1" value="0">
+			<input type="range" id="speedSlider" min="-25" max="25" step="1" value="0">
 		</div>
 		<div class="speed-control">
 			<label>
@@ -31,6 +33,12 @@
 			<label for="weightInput">Weight, kg:</label>
 			<input type="number" id="weightInput" min="40" max="150" step="1" value="">
 		</div>
+		<div class="densified-control">
+			<label>
+				<input type="checkbox" id="densifiedToggle" checked>
+				Use densified track (5m)
+			</label>
+		</div>
 		<div class="gpx-upload">
 			<div class="gpx-buttons">
 				<label for="gpxFile" class="upload-btn">📁 Load GPX</label>
@@ -38,6 +46,7 @@
 				<button id="deleteGpxBtn" class="delete-btn" title="Delete track">🗑️</button>
 			</div>
 			<span id="gpxFileName"></span>
+		</div>
 		</div>
 	</div>
 	<div class="info-box hidden">

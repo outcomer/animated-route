@@ -1,6 +1,7 @@
 import { GPXMetrics } from './GPXMetrics.js';
 import { UIController } from './UIController.js';
 import { RouteAnimator } from './RouteAnimator.js';
+import { GPXDensifier } from './GPXDensifier.js';
 
 // Дефолтные значения
 const DEFAULT_WEIGHT = 80; // кг
@@ -60,9 +61,11 @@ export class TrackVisualization {
 			const appDataStr = localStorage.getItem(STORAGE_KEY);
 			if (!appDataStr) {
 				const defaultData = {
-					gpx: null,
+					gpx: null, // Оригинальный GPX
+					gpxDensified: null, // Нормализованный GPX (5м между точками)
 					gpxFileName: null,
-					weight: DEFAULT_WEIGHT
+					weight: DEFAULT_WEIGHT,
+					useDensified: true // По умолчанию использовать нормализованный
 				};
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
 			}
@@ -124,12 +127,19 @@ export class TrackVisualization {
 			const weight = appData.weight || DEFAULT_WEIGHT;
 			this.ui.initWeight(weight);
 
+			// Инициализируем toggle
+			const useDensified = appData.useDensified !== undefined ? appData.useDensified : true;
+			this.ui.initDensifiedToggle(useDensified);
+
 			// Загружаем GPX если есть
 			if (appData.gpx && appData.gpxFileName) {
-				this.parseAndDisplayGPX(appData.gpx);
+				// Выбираем какую версию отображать
+				const gpxToDisplay = useDensified && appData.gpxDensified ? appData.gpxDensified : appData.gpx;
+				this.parseAndDisplayGPX(gpxToDisplay);
 				this.ui.gpxFileName.textContent = `📄 ${appData.gpxFileName}`;
 				this.ui.deleteGpxBtn.classList.add('visible');
 				console.log('Loaded app data from localStorage');
+				console.log('Using', useDensified ? 'densified' : 'original', 'track');
 			} else {
 				this.ui.gpxFileName.textContent = 'No track loaded';
 				this.ui.deleteGpxBtn.classList.remove('visible');
@@ -278,6 +288,25 @@ export class TrackVisualization {
 		this.ui.deleteGpxBtn.addEventListener('click', () => {
 			this.deleteTrack();
 		});
+
+		// Обработчик сворачивания/разворачивания панели контролов
+		this.ui.toggleControlsBtn.addEventListener('click', () => {
+			this.ui.toggleControls();
+		});
+
+		// Обработчик переключения между оригинальным и нормализованным треком
+		this.ui.densifiedToggle.addEventListener('change', (e) => {
+			const useDensified = e.target.checked;
+			this.saveAppData('useDensified', useDensified);
+
+			// Перезагружаем трек если он загружен
+			const appData = this.loadAppData();
+			if (appData && appData.gpx) {
+				const gpxToDisplay = useDensified && appData.gpxDensified ? appData.gpxDensified : appData.gpx;
+				this.parseAndDisplayGPX(gpxToDisplay);
+				console.log('Switched to', useDensified ? 'densified' : 'original', 'track');
+			}
+		});
 	}
 
 	async startAnimation() {
@@ -323,9 +352,20 @@ export class TrackVisualization {
 		reader.onload = (e) => {
 			const gpxText = e.target.result;
 
-			// Сохраняем GPX в localStorage
+			// Создаем нормализованную версию трека (5м между точками)
+			console.log('Creating densified version of the track...');
+			let gpxDensified;
 			try {
-				this.saveAppData('gpx', gpxText);
+				gpxDensified = GPXDensifier.densify(gpxText, 5);
+			} catch (error) {
+				console.error('Error densifying GPX:', error);
+				gpxDensified = null;
+			}
+
+			// Сохраняем обе версии в localStorage
+			try {
+				this.saveAppData('gpx', gpxText); // Оригинал
+				this.saveAppData('gpxDensified', gpxDensified); // Нормализованный
 				this.saveAppData('gpxFileName', file.name);
 				console.log('App data saved to localStorage');
 			} catch (error) {
@@ -334,8 +374,12 @@ export class TrackVisualization {
 				return;
 			}
 
+			// Определяем какую версию отображать
+			const useDensified = this.loadAppData('useDensified') !== false; // По умолчанию true
+			const gpxToDisplay = useDensified && gpxDensified ? gpxDensified : gpxText;
+
 			// Парсим и отображаем (включая полную линию маршрута и инфобокс)
-			this.parseAndDisplayGPX(gpxText);
+			this.parseAndDisplayGPX(gpxToDisplay);
 			this.ui.gpxFileName.textContent = `📄 ${file.name}`;
 			this.ui.deleteGpxBtn.classList.add('visible');
 
@@ -356,8 +400,9 @@ export class TrackVisualization {
 			return;
 		}
 
-		// Удаляем GPX из appData, но оставляем настройки
+		// Удаляем обе версии GPX из appData, но оставляем настройки
 		this.saveAppData('gpx', null);
+		this.saveAppData('gpxDensified', null);
 		this.saveAppData('gpxFileName', null);
 
 		// Очищаем карту
@@ -399,7 +444,7 @@ export class TrackVisualization {
 					width: { ideal: 3840 },
 					height: { ideal: 2160 },
 					aspectRatio: { ideal: 16/9 },
-					frameRate: { max: 120, ideal: 120 }
+					frameRate: { ideal: 60 } // 60 FPS для плавной записи без VFR
 				},
 				audio: false,
 				systemAudio: "exclude",
@@ -421,10 +466,10 @@ export class TrackVisualization {
 			// Пересчитываем размеры карты после изменения размеров контейнера
 			this.map.invalidateSize();
 
-			// Настройки MediaRecorder
+			// Настройки MediaRecorder - оптимизированные для плавной записи
 			const options = {
-				mimeType: 'video/webm;codecs=av1',
-				videoBitsPerSecond: 200000000 // 200 Mbps вместо 250 Mbps
+				mimeType: 'video/webm;codecs=vp9', // VP9 легче чем AV1
+				videoBitsPerSecond: 15000000 // 15 Mbps - оптимальный баланс
 			};
 
 			const mediaRecorder = new MediaRecorder(recordStream, options);
@@ -464,8 +509,9 @@ export class TrackVisualization {
 				}
 			};
 
-			// Начинаем запись
-			mediaRecorder.start();
+			// Начинаем запись с timeslice для равномерной записи
+			// 1000ms = записываем чанки каждую секунду для плавности
+			mediaRecorder.start(1000);
 
 			// Устанавливаем коллбэк на завершение анимации
 			this.animator.onCompleteCallback = async (showControlsCallback) => {

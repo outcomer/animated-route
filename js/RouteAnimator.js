@@ -7,36 +7,16 @@ export class RouteAnimator {
 		this.state = state;
 		this.ui = ui;
 		this.trackViz = trackViz; // Ссылка на TrackVisualization
-		this.animationTimeout = null;
+		this.animationFrameId = null; // requestAnimationFrame ID
+		this.lastFrameTime = null; // Время последнего кадра
+		this.accumulatedTime = 0; // Накопленное время для продвижения к следующей точке
 		this.currentStep = 0;
 		this.animatedLine = null;
 		this.segments = []; // Массив отрисованных сегментов
 		this.isRunning = false;
-		this.distances = []; // Расстояния между точками
-		this.avgDistance = 0; // Среднее расстояние
-		this.smoothDistance = 0; // Сглаженное расстояние
-		this.smoothingAlpha = 0.75; // Коэффициент сглаживания (0.75 = 75% предыдущее, 25% новое)
 
 		// Canvas renderer для эффективной отрисовки
 		this.renderer = L.canvas();
-	}
-
-	// Предварительный расчет расстояний между точками
-	precalculateDistances() {
-		this.distances = [];
-		for (let i = 1; i < this.state.fullRoute.length; i++) {
-			const dist = GPXMetrics.calculateDistance([
-				this.state.fullRoute[i - 1],
-				this.state.fullRoute[i]
-			]);
-			this.distances.push(dist);
-		}
-
-		// Рассчитываем среднее расстояние для нормализации
-		if (this.distances.length > 0) {
-			this.avgDistance = this.distances.reduce((a, b) => a + b, 0) / this.distances.length;
-			this.smoothDistance = this.distances[0]; // Инициализируем первым значением
-		}
 	}
 
 	start() {
@@ -48,11 +28,12 @@ export class RouteAnimator {
 		// Очищаем предыдущие сегменты
 		this.clearSegments();
 
-		// Предварительно рассчитываем расстояния
-		this.precalculateDistances();
+		// Сбрасываем время
+		this.lastFrameTime = null;
+		this.accumulatedTime = 0;
 
-		// Запускаем первый шаг
-		this.scheduleNextStep();
+		// Запускаем анимацию через requestAnimationFrame
+		this.animationFrameId = requestAnimationFrame((timestamp) => this.animate(timestamp));
 	}
 
 	clearSegments() {
@@ -61,67 +42,52 @@ export class RouteAnimator {
 		this.segments = [];
 	}
 
-	scheduleNextStep() {
+	// Главный цикл анимации на базе requestAnimationFrame
+	animate(timestamp) {
 		if (!this.isRunning) return;
 
-		if (this.currentStep >= this.state.fullRoute.length) {
-			this.complete();
-			return;
+		// Инициализация времени на первом кадре
+		if (this.lastFrameTime === null) {
+			this.lastFrameTime = timestamp;
 		}
 
-		this.animateStep();
+		// Рассчитываем время с последнего кадра (в миллисекундах)
+		const deltaTime = timestamp - this.lastFrameTime;
+		this.lastFrameTime = timestamp;
 
-		// Рассчитываем задержку до следующего шага на основе расстояния
-		const delay = this.calculateDelay();
-		this.animationTimeout = setTimeout(() => this.scheduleNextStep(), delay);
+		// Накапливаем время
+		this.accumulatedTime += deltaTime;
+
+		// Рассчитываем время на одну точку (в мс)
+		const timePerPoint = this.calculateTimePerPoint();
+
+		// Проверяем сколько точек нужно продвинуть
+		while (this.accumulatedTime >= timePerPoint && this.isRunning) {
+			this.accumulatedTime -= timePerPoint;
+
+			if (this.currentStep >= this.state.fullRoute.length) {
+				this.complete();
+				return;
+			}
+
+			this.animateStep();
+		}
+
+		// Запрашиваем следующий кадр
+		if (this.isRunning) {
+			this.animationFrameId = requestAnimationFrame((ts) => this.animate(ts));
+		}
 	}
 
-	calculateDelay() {
-		const baseDelay = 50; // Базовая задержка в мс
-		const minDelay = 10; // Минимальная задержка для стабильной работы на мобильных (Android требует минимум 4ms)
+	// Рассчитывает время на отрисовку одной точки (в мс)
+	// Экспоненциальная зависимость от скорости (мягкая)
+	calculateTimePerPoint() {
+		const baseTime = 50; // Базовое время на точну в мс
 
-		// Конвертируем значение слайдера (-5 до +5) в реальную скорость
-		// 0 на слайдере = 3x скорость (базовая)
-		const actualSpeed = Math.max(0.5, 3 + this.state.speed);
+		// Сдвиг на +5: теперь speed=0 соответствует старому speed=+5
+		const actualSpeed = 4 * Math.pow(10, (this.state.speed + 5) / 25);
 
-		if (this.currentStep >= this.distances.length || !this.avgDistance || this.avgDistance === 0) {
-			return baseDelay / actualSpeed;
-		}
-
-		// Текущее расстояние до следующей точки
-		const currentDistance = this.distances[this.currentStep];
-
-		// Проверка на валидность данных
-		if (!currentDistance || isNaN(currentDistance)) {
-			return baseDelay / actualSpeed;
-		}
-
-		// Экспоненциальное сглаживание
-		this.smoothDistance = this.smoothingAlpha * this.smoothDistance +
-		                      (1 - this.smoothingAlpha) * currentDistance;
-
-		// Нормализуем относительно среднего расстояния
-		// Если расстояние больше среднего -> была высокая скорость -> быстрее анимация
-		// Если расстояние меньше среднего -> была низкая скорость -> медленнее анимация
-		let normalizedDistance = this.smoothDistance / this.avgDistance;
-
-		// Проверка на валидность нормализованного расстояния
-		if (!normalizedDistance || isNaN(normalizedDistance) || normalizedDistance <= 0) {
-			normalizedDistance = 1.0;
-		}
-
-		// Применяем интенсивность эффекта через степенную функцию
-		// intensity = 1.0 -> линейный эффект
-		// intensity > 1.0 -> усиленный эффект (более драматичная разница)
-		// intensity < 1.0 -> ослабленный эффект (менее заметная разница)
-		const intensity = this.state.animationIntensity;
-		normalizedDistance = Math.pow(normalizedDistance, intensity);
-
-		// Задержка обратно пропорциональна расстоянию
-		// Минимум 10ms для стабильной работы на мобильных устройствах
-		const delay = Math.max(minDelay, baseDelay / normalizedDistance / actualSpeed);
-
-		return delay;
+		return baseTime / actualSpeed;
 	}
 
 	animateStep() {
@@ -196,9 +162,9 @@ export class RouteAnimator {
 
 	stop() {
 		this.isRunning = false;
-		if (this.animationTimeout) {
-			clearTimeout(this.animationTimeout);
-			this.animationTimeout = null;
+		if (this.animationFrameId) {
+			cancelAnimationFrame(this.animationFrameId);
+			this.animationFrameId = null;
 		}
 		this.ui.startBtn.disabled = false;
 	}

@@ -11,9 +11,17 @@ export class UIController {
 		this.zoomSlider = document.getElementById('zoomSlider');
 		this.zoomLabel = document.getElementById('zoomLabel');
 		this.weightInput = document.getElementById('weightInput');
+		this.densifiedToggle = document.getElementById('densifiedToggle');
 		this.gpxFileInput = document.getElementById('gpxFile');
 		this.gpxFileName = document.getElementById('gpxFileName');
 		this.deleteGpxBtn = document.getElementById('deleteGpxBtn');
+		this.toggleControlsBtn = document.getElementById('toggleControlsBtn');
+
+		// На мобильных устройствах панель свернута по умолчанию
+		this.isControlsCollapsed = window.innerWidth <= 768;
+		if (this.isControlsCollapsed) {
+			this.controls.classList.add('collapsed');
+		}
 	}
 
 	showCountdown(callback) {
@@ -107,5 +115,18 @@ export class UIController {
 
 	initWeight(weight) {
 		this.weightInput.value = weight;
+	}
+
+	initDensifiedToggle(useDensified) {
+		this.densifiedToggle.checked = useDensified;
+	}
+
+	toggleControls() {
+		this.isControlsCollapsed = !this.isControlsCollapsed;
+		if (this.isControlsCollapsed) {
+			this.controls.classList.add('collapsed');
+		} else {
+			this.controls.classList.remove('collapsed');
+		}
 	}
 }

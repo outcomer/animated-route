@@ -6,8 +6,7 @@ const state = {
 	// Основные параметры
 	title: 'GPX Route Viewer',
 	// Настройки визуализации
-	speed: 0, // Значение слайдера (-5 до +5, где 0 = базовая скорость)
-	animationIntensity: 1.5, // Сила эффекта замедления (1.0 = линейно, 2.0 = сильно, 0.5 = слабо)
+	speed: 0, // Значение слайдера (-25 до +25, где 0 = базовая скорость)
 	trackColor: 'rgb(0 0 0)',
 	// 1. OSM Standard (базовая):
 	// mapTileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
