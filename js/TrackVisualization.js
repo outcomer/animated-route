@@ -310,6 +310,16 @@ export class TrackVisualization {
 	}
 
 	async startAnimation() {
+		// Проверяем и загружаем правильную версию трека из storage перед анимацией
+		const appData = this.loadAppData();
+		if (appData && appData.gpx) {
+			const useDensified = appData.useDensified !== false; // По умолчанию true
+			const gpxToDisplay = useDensified && appData.gpxDensified ? appData.gpxDensified : appData.gpx;
+
+			// Перезагружаем трек если нужно (на случай если toggle изменился)
+			this.parseAndDisplayGPX(gpxToDisplay);
+		}
+
 		// Сбрасываем состояние аниматора
 		if (this.animator.animatedLine) {
 			this.map.removeLayer(this.animator.animatedLine);
