@@ -80,14 +80,12 @@ export class RouteAnimator {
 	}
 
 	// Рассчитывает время на отрисовку одной точки (в мс)
-	// Экспоненциальная зависимость от скорости (мягкая)
+	// На основе общей длительности анимации
 	calculateTimePerPoint() {
-		const baseTime = 50; // Базовое время на точну в мс
+		const totalPoints = this.state.fullRoute.length;
+		const durationMs = this.state.animationDuration * 1000; // Секунды в миллисекунды
 
-		// Сдвиг на +5: теперь speed=0 соответствует старому speed=+5
-		const actualSpeed = 4 * Math.pow(10, (this.state.speed + 5) / 25);
-
-		return baseTime / actualSpeed;
+		return durationMs / totalPoints;
 	}
 
 	animateStep() {
@@ -117,8 +115,8 @@ export class RouteAnimator {
 		const percent = Math.round((this.currentStep / this.state.fullRoute.length) * 100);
 		this.ui.updateProgress(percent);
 
-		// Плавное панорамирование к текущей точке
-		if (coords.length > 0) {
+		// Плавное панорамирование к текущей точке (только если включен режим следования)
+		if (this.state.cameraFollow && coords.length > 0) {
 			const lastPoint = coords[coords.length - 1];
 			this.map.panTo(lastPoint, { animate: true });
 		}
@@ -129,35 +127,31 @@ export class RouteAnimator {
 		this.ui.setProgressComplete();
 		this.ui.showInfoBox();
 
-		// Создаём финальную polyline из всех точек для bounds
-		const allCoords = this.state.fullRoute.map(p => [p.lat, p.lng]);
-		const finalLine = L.polyline(allCoords);
+		// Если режим follow route - центруем весь трек без изменения зума
+		if (this.state.cameraFollow) {
+			const allCoords = this.state.fullRoute.map(p => [p.lat, p.lng]);
+			const bounds = L.latLngBounds(allCoords);
+			const currentZoom = this.map.getZoom();
 
+			this.map.flyToBounds(bounds, {
+				duration: 1.5,
+				maxZoom: currentZoom,
+				padding: [50, 50]
+			});
+		}
+
+		// Ждём 2 секунды после окончания анимации
 		setTimeout(() => {
-			const onMove = () => this.map.fire('viewreset');
-			this.map.on('move', onMove);
-
-			this.map.flyToBounds(finalLine.getBounds(), {
-				padding: [50, 50],
-				duration: 2.5
-			});
-
-			this.map.once('moveend', () => {
-				this.map.off('move', onMove);
-				// Ждём 2 секунды после окончания анимации
-				setTimeout(() => {
-					// Если есть коллбэк завершения (запись) - передаем ему управление
-					if (this.onCompleteCallback) {
-						// Передаем функцию показа контролов в callback
-						this.onCompleteCallback(() => this.ui.showControls());
-						this.onCompleteCallback = null;
-					} else {
-						// Обычная анимация - показываем контролы сразу
-						this.ui.showControls();
-					}
-				}, 2000);
-			});
-		}, 100);
+			// Если есть коллбэк завершения (запись) - передаем ему управление
+			if (this.onCompleteCallback) {
+				// Передаем функцию показа контролов в callback
+				this.onCompleteCallback(() => this.ui.showControls());
+				this.onCompleteCallback = null;
+			} else {
+				// Обычная анимация - показываем контролы сразу
+				this.ui.showControls();
+			}
+		}, 2000);
 	}
 
 	stop() {

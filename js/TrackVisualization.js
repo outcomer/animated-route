@@ -7,13 +7,26 @@ import { GPXDensifier } from './GPXDensifier.js';
 const DEFAULT_WEIGHT = 80; // кг
 const STORAGE_KEY = `${window.location.hostname}_appData`;
 
+// Словарь стилей карт
+const MAP_STYLES = {
+	light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+	dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+	voyager: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+	osm: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+	osm_hot: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+	cyclosm: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+	satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+	street: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+	topo: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
+};
+
 // Главный класс приложения
 export class TrackVisualization {
 	constructor(state) {
 		this.state = state;
 		this.initMap();
 		this.ui = new UIController();
-		this.ui.initSpeed(this.state.speed); // Инициализируем ползунок скорости
+		this.ui.initDuration(this.state.animationDuration); // Инициализируем ползунок длительности
 		this.ui.initZoom(this.state.routeZoom); // Инициализируем ползунок зума
 		this.animator = new RouteAnimator(this.map, this.state, this.ui, this);
 		this.initAppData(); // Инициализируем структуру данных
@@ -28,7 +41,8 @@ export class TrackVisualization {
 			markerZoomAnimation: true
 		}).setView([49.997, 14.24], this.state.initialZoom);
 
-		L.tileLayer(this.state.mapTileUrl, {
+		// Создаем tile layer с дефолтным стилем (будет заменен при загрузке из localStorage)
+		this.tileLayer = L.tileLayer(MAP_STYLES['light'], {
 			attribution: '© OpenStreetMap © CartoDB',
 			maxZoom: 18,
 			keepBuffer: 6,
@@ -38,20 +52,23 @@ export class TrackVisualization {
 
 		this.startIcon = L.icon({
 			iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-			shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 			iconSize: [25, 41],
 			iconAnchor: [12, 41],
-			popupAnchor: [1, -34],
-			shadowSize: [41, 41]
+			popupAnchor: [1, -34]
 		});
 
 		this.endIcon = L.icon({
 			iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-			shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 			iconSize: [25, 41],
 			iconAnchor: [12, 41],
-			popupAnchor: [1, -34],
-			shadowSize: [41, 41]
+			popupAnchor: [1, -34]
+		});
+
+		// Синхронизируем слайдер зума при любом изменении зума карты (мышь, жесты и т.д.)
+		this.map.on('zoomend', () => {
+			const currentZoom = this.map.getZoom();
+			this.state.routeZoom = currentZoom;
+			this.ui.updateZoomSlider(currentZoom);
 		});
 	}
 
@@ -65,7 +82,11 @@ export class TrackVisualization {
 					gpxDensified: null, // Нормализованный GPX (5м между точками)
 					gpxFileName: null,
 					weight: DEFAULT_WEIGHT,
-					useDensified: true // По умолчанию использовать нормализованный
+					useDensified: true, // По умолчанию использовать нормализованный
+					cameraFollow: true, // По умолчанию следовать за маршрутом
+					mapStyle: 'light', // По умолчанию CartoDB Light
+					animationDuration: 60, // По умолчанию 60 секунд
+					routeZoom: this.state.initialZoom // Используем initialZoom из state
 				};
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
 			}
@@ -124,23 +145,40 @@ export class TrackVisualization {
 			}
 
 			// Загружаем настройки
-			const weight = appData.weight || DEFAULT_WEIGHT;
-			this.ui.initWeight(weight);
+			this.ui.initWeight(appData.weight);
+			this.ui.initDensifiedToggle(appData.useDensified);
+			this.ui.initCameraFollowToggle(appData.cameraFollow);
+			this.state.cameraFollow = appData.cameraFollow;
 
-			// Инициализируем toggle
-			const useDensified = appData.useDensified !== undefined ? appData.useDensified : true;
-			this.ui.initDensifiedToggle(useDensified);
+			// Инициализируем стиль карты
+			this.ui.mapStyleSelect.value = appData.mapStyle;
+			this.changeMapStyle(appData.mapStyle);
+
+			// Загружаем animation duration
+			this.state.animationDuration = appData.animationDuration;
+			this.ui.initDuration(appData.animationDuration);
+
+			// Загружаем routeZoom
+			this.state.routeZoom = appData.routeZoom;
+			this.ui.initZoom(appData.routeZoom);
 
 			// Загружаем GPX если есть
 			if (appData.gpx && appData.gpxFileName) {
 				// Выбираем какую версию отображать
-				const gpxToDisplay = useDensified && appData.gpxDensified ? appData.gpxDensified : appData.gpx;
-				this.parseAndDisplayGPX(gpxToDisplay);
+				const gpxToDisplay = appData.useDensified && appData.gpxDensified ? appData.gpxDensified : appData.gpx;
+				this.parseAndDisplayGPX(gpxToDisplay, false); // false = не делать fitBounds при восстановлении
 				this.ui.gpxFileName.textContent = `📄 ${appData.gpxFileName}`;
 				this.ui.deleteGpxBtn.classList.add('visible');
 				console.log('Loaded app data from localStorage');
-				console.log('Using', useDensified ? 'densified' : 'original', 'track');
+				console.log('Using', appData.useDensified ? 'densified' : 'original', 'track');
+
+				// Центруем карту на треке с сохраненным зумом
+				const bounds = this.fullRouteLine.getBounds();
+				const center = bounds.getCenter();
+				this.map.setView(center, appData.routeZoom);
 			} else {
+				// Если трека нет, применяем зум к пустой карте
+				this.map.setZoom(appData.routeZoom);
 				this.ui.gpxFileName.textContent = 'No track loaded';
 				this.ui.deleteGpxBtn.classList.remove('visible');
 			}
@@ -149,7 +187,7 @@ export class TrackVisualization {
 		}
 	}
 
-	parseAndDisplayGPX(gpxText) {
+	parseAndDisplayGPX(gpxText, shouldFitBounds = true) {
 		const parser = new DOMParser();
 		const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
 		const trkpts = gpxDoc.querySelectorAll('trkpt');
@@ -174,11 +212,11 @@ export class TrackVisualization {
 
 		this.calculateAndDisplayMetrics(points);
 		this.addMarkers(points);
-		this.drawFullRoute(points); // fitBounds вызывается внутри
+		this.drawFullRoute(points, shouldFitBounds);
 		this.ui.showInfoBox(); // Показываем информацию о треке
 	}
 
-	drawFullRoute(points) {
+	drawFullRoute(points, shouldFitBounds = true) {
 		// Удаляем предыдущую линию, если есть
 		if (this.fullRouteLine) {
 			this.map.removeLayer(this.fullRouteLine);
@@ -193,10 +231,19 @@ export class TrackVisualization {
 			smoothFactor: 2.0
 		}).addTo(this.map);
 
-		// Масштабируем карту так, чтобы был виден весь маршрут
-		this.map.fitBounds(this.fullRouteLine.getBounds(), {
-			padding: [50, 50]
-		});
+		// Масштабируем карту так, чтобы был виден весь маршрут (только при новой загрузке)
+		if (shouldFitBounds) {
+			this.map.fitBounds(this.fullRouteLine.getBounds(), {
+				padding: [50, 50]
+			});
+
+			// Ждем завершения fitBounds и сохраняем зум
+			this.map.once('moveend', () => {
+				const currentZoom = this.map.getZoom();
+				this.state.routeZoom = currentZoom;
+				this.saveAppData('routeZoom', currentZoom);
+			});
+		}
 	}
 
 	calculateAndDisplayMetrics(points) {
@@ -223,18 +270,54 @@ export class TrackVisualization {
 		}
 	}
 
-	addMarkers(points) {
+	async addMarkers(points) {
 		// Удаляем предыдущие маркеры, если они есть
 		if (this.startMarker) this.map.removeLayer(this.startMarker);
 		if (this.endMarker) this.map.removeLayer(this.endMarker);
 
-		this.startMarker = L.marker([points[0].lat, points[0].lng], { icon: this.startIcon })
-			.addTo(this.map)
-			.bindPopup('<b>Start</b>');
+		// Показываем маркер старта
+		this.startMarker = L.marker([points[0].lat, points[0].lng], {
+			icon: this.startIcon
+		})
+		.addTo(this.map)
+		.bindPopup('<b>Start</b>');
 
-		this.endMarker = L.marker([points[points.length - 1].lat, points[points.length - 1].lng], { icon: this.endIcon })
-			.addTo(this.map)
-			.bindPopup('<b>Finish</b>');
+		// Задержка между показом старта и финиша
+		await new Promise(resolve => setTimeout(resolve, 300));
+
+		// Показываем маркер финиша
+		this.endMarker = L.marker([points[points.length - 1].lat, points[points.length - 1].lng], {
+			icon: this.endIcon
+		})
+		.addTo(this.map)
+		.bindPopup('<b>Finish</b>');
+
+		// Задержка после показа маркера финиша
+		await new Promise(resolve => setTimeout(resolve, 700));
+	}
+
+	changeMapStyle(styleKey) {
+		const tileUrl = MAP_STYLES[styleKey];
+		if (!tileUrl) {
+			console.error('Unknown map style:', styleKey);
+			return;
+		}
+
+		// Удаляем старый tile layer
+		if (this.tileLayer) {
+			this.map.removeLayer(this.tileLayer);
+		}
+
+		// Добавляем новый tile layer
+		this.tileLayer = L.tileLayer(tileUrl, {
+			attribution: '© OpenStreetMap © CartoDB',
+			maxZoom: 18,
+			keepBuffer: 6,
+			updateWhenIdle: false,
+			updateWhenZooming: false
+		}).addTo(this.map);
+
+		console.log('Map style changed to:', styleKey);
 	}
 
 	attachEventListeners() {
@@ -246,14 +329,18 @@ export class TrackVisualization {
 			this.startAnimation();
 		});
 
-		this.ui.speedSlider.addEventListener('input', (e) => {
-			this.state.speed = parseInt(e.target.value);
-			this.ui.updateSpeedLabel(this.state.speed);
+		this.ui.durationSlider.addEventListener('input', (e) => {
+			this.state.animationDuration = parseInt(e.target.value);
+			this.ui.updateDurationLabel(this.state.animationDuration);
+			this.saveAppData('animationDuration', this.state.animationDuration);
 		});
 
 		this.ui.zoomSlider.addEventListener('input', (e) => {
 			this.state.routeZoom = parseInt(e.target.value);
 			this.ui.updateZoomLabel(this.state.routeZoom);
+			this.saveAppData('routeZoom', this.state.routeZoom);
+			// Сразу применяем зум к карте
+			this.map.setZoom(this.state.routeZoom);
 		});
 
 		this.ui.weightInput.addEventListener('input', (e) => {
@@ -307,19 +394,24 @@ export class TrackVisualization {
 				console.log('Switched to', useDensified ? 'densified' : 'original', 'track');
 			}
 		});
+
+		// Обработчик переключения режима следования камеры
+		this.ui.cameraFollowToggle.addEventListener('change', (e) => {
+			const cameraFollow = e.target.checked;
+			this.state.cameraFollow = cameraFollow;
+			this.saveAppData('cameraFollow', cameraFollow);
+			console.log('Camera follow:', cameraFollow ? 'enabled' : 'disabled');
+		});
+
+		// Обработчик смены стиля карты
+		this.ui.mapStyleSelect.addEventListener('change', (e) => {
+			const styleKey = e.target.value;
+			this.changeMapStyle(styleKey);
+			this.saveAppData('mapStyle', styleKey);
+		});
 	}
 
 	async startAnimation() {
-		// Проверяем и загружаем правильную версию трека из storage перед анимацией
-		const appData = this.loadAppData();
-		if (appData && appData.gpx) {
-			const useDensified = appData.useDensified !== false; // По умолчанию true
-			const gpxToDisplay = useDensified && appData.gpxDensified ? appData.gpxDensified : appData.gpx;
-
-			// Перезагружаем трек если нужно (на случай если toggle изменился)
-			this.parseAndDisplayGPX(gpxToDisplay);
-		}
-
 		// Сбрасываем состояние аниматора
 		if (this.animator.animatedLine) {
 			this.map.removeLayer(this.animator.animatedLine);
@@ -328,25 +420,58 @@ export class TrackVisualization {
 		this.animator.clearSegments();
 		this.animator.currentStep = 0;
 
-		// Убираем полную линию маршрута и инфобокс
+		// Убираем полную линию маршрута, маркеры и инфобокс
 		if (this.fullRouteLine) {
 			this.map.removeLayer(this.fullRouteLine);
+		}
+		if (this.startMarker) {
+			this.map.removeLayer(this.startMarker);
+		}
+		if (this.endMarker) {
+			this.map.removeLayer(this.endMarker);
 		}
 		this.ui.hideInfoBox();
 		this.ui.clearProgress();
 
-		// Центрируем карту на точке старта
-		const startPoint = this.state.fullRoute[0];
-		this.map.setView([startPoint.lat, startPoint.lng], this.state.routeZoom, {
-			animate: true,
-			duration: 1
-		});
+		// Сохраняем текущий зум пользователя
+		const userZoom = this.map.getZoom();
 
-		// Ждём 1 секунду, чтобы завершилась анимация центрирования
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		// Определяем центр маршрута и bounds
+		const coords = this.state.fullRoute.map(p => [p.lat, p.lng]);
+		const bounds = L.latLngBounds(coords);
+		const center = bounds.getCenter();
+		const duration = 4;
 
-		// Показываем countdown и запускаем анимацию
-		this.ui.showCountdown(() => this.animator.start());
+		// Шаг 1: Мгновенно ставим зум 5 на центре маршрута
+		this.map.setView(center, 5, { animate: true });
+
+		// Шаг 2: Показываем countdown
+		await this.ui.showCountdown();
+
+		// Шаг 3: Плавный полёт к нужной позиции с исходным зумом
+		if (this.state.cameraFollow) {
+			// Если камера следует - летим к стартовой точке
+			const startPoint = this.state.fullRoute[0];
+			this.map.flyTo([startPoint.lat, startPoint.lng], userZoom, {
+				duration: duration
+			});
+		} else {
+			// Если камера статична - летим к центру маршрута
+			// чтобы при исходном зуме весь маршрут был виден
+			this.map.flyTo(center, userZoom, {
+				duration: duration
+			});
+		}
+		await new Promise(resolve => setTimeout(resolve, duration * 1000));
+
+		// Принудительно обновляем карту чтобы убрать артефакты тайлов
+		this.map.invalidateSize();
+
+		// Шаг 4: Показываем маркеры старта и финиша с задержками и анимацией
+		await this.addMarkers(this.state.fullRoute);
+
+		// Шаг 5: Запускаем анимацию
+		this.animator.start();
 	}
 
 	handleGPXUpload(event) {
@@ -451,10 +576,10 @@ export class TrackVisualization {
 			// Запрашиваем захват с выбором вкладки или окна (без Entire Screen)
 			recordStream = await navigator.mediaDevices.getDisplayMedia({
 				video: {
-					width: { ideal: 3840 },
-					height: { ideal: 2160 },
+					width: { ideal: 1920 },
+					height: { ideal: 1080 },
 					aspectRatio: { ideal: 16/9 },
-					frameRate: { ideal: 60 } // 60 FPS для плавной записи без VFR
+					frameRate: { ideal: 120 } // 60 FPS для плавной записи без VFR
 				},
 				audio: false,
 				systemAudio: "exclude",
@@ -478,7 +603,7 @@ export class TrackVisualization {
 
 			// Настройки MediaRecorder - оптимизированные для плавной записи
 			const options = {
-				mimeType: 'video/webm;codecs=vp9', // VP9 легче чем AV1
+				mimeType: 'video/webm;codecs=av1', // VP9 легче чем AV1
 				videoBitsPerSecond: 15000000 // 15 Mbps - оптимальный баланс
 			};
 

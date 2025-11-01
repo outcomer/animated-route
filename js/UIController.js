@@ -6,50 +6,43 @@ export class UIController {
 		this.progress = document.getElementById('progress');
 		this.startBtn = document.getElementById('startBtn');
 		this.recordBtn = document.getElementById('recordBtn');
-		this.speedSlider = document.getElementById('speedSlider');
-		this.speedLabel = document.getElementById('speedLabel');
+		this.durationSlider = document.getElementById('durationSlider');
+		this.durationLabel = document.getElementById('durationLabel');
 		this.zoomSlider = document.getElementById('zoomSlider');
 		this.zoomLabel = document.getElementById('zoomLabel');
 		this.weightInput = document.getElementById('weightInput');
 		this.densifiedToggle = document.getElementById('densifiedToggle');
+		this.cameraFollowToggle = document.getElementById('cameraFollowToggle');
+		this.mapStyleSelect = document.getElementById('mapStyleSelect');
 		this.gpxFileInput = document.getElementById('gpxFile');
 		this.gpxFileName = document.getElementById('gpxFileName');
 		this.deleteGpxBtn = document.getElementById('deleteGpxBtn');
 		this.toggleControlsBtn = document.getElementById('toggleControlsBtn');
 
-		// На мобильных устройствах панель свернута по умолчанию
-		this.isControlsCollapsed = window.innerWidth <= 768;
-		if (this.isControlsCollapsed) {
-			this.controls.classList.add('collapsed');
-		}
+		// Состояние сайдбара
+		this.isControlsOpen = false;
+		this.isControlsVisible = true; // Видимость кнопки и сайдбара
 	}
 
-	showCountdown(callback) {
-		this.controls.style.display = 'none';
+	async showCountdown() {
+		this.hideControls();
 
 		const countdown = document.createElement('div');
 		countdown.className = 'countdown';
 		document.body.appendChild(countdown);
 
 		const numbers = [3, 2, 1];
-		let index = 0;
 
-		const showNext = () => {
-			if (index < numbers.length) {
-				countdown.textContent = numbers[index];
-				countdown.style.animation = 'none';
-				setTimeout(() => {
-					countdown.style.animation = 'pulse 0.25s ease-in-out';
-				}, 10);
-				index++;
-				setTimeout(showNext, 500);
-			} else {
-				countdown.remove();
-				setTimeout(callback, 1000);
-			}
-		};
+		for (const number of numbers) {
+			countdown.textContent = number;
+			countdown.style.animation = 'none';
+			await new Promise(resolve => setTimeout(resolve, 10));
+			countdown.style.animation = 'pulse 0.25s ease-in-out';
+			await new Promise(resolve => setTimeout(resolve, 500));
+		}
 
-		showNext();
+		countdown.remove();
+		await new Promise(resolve => setTimeout(resolve, 1000));
 	}
 
 	showInfoBox() {
@@ -61,11 +54,31 @@ export class UIController {
 	}
 
 	showControls() {
-		this.controls.style.display = 'block';
+		this.isControlsVisible = true;
+		this.isControlsOpen = true; // Открываем сайдбар после анимации
+		this.updateControlsVisibility();
 	}
 
 	hideControls() {
-		this.controls.style.display = 'none';
+		this.isControlsVisible = false;
+		this.isControlsOpen = false;
+		this.updateControlsVisibility();
+	}
+
+	updateControlsVisibility() {
+		if (this.isControlsVisible) {
+			this.toggleControlsBtn.classList.remove('hidden');
+			this.controls.classList.remove('hidden');
+			if (this.isControlsOpen) {
+				this.controls.classList.add('open');
+			} else {
+				this.controls.classList.remove('open');
+			}
+		} else {
+			this.toggleControlsBtn.classList.add('hidden');
+			this.controls.classList.add('hidden');
+			this.controls.classList.remove('open');
+		}
 	}
 
 	updateProgress(percent) {
@@ -93,15 +106,13 @@ export class UIController {
 		this.progress = document.getElementById('progress');
 	}
 
-	updateSpeedLabel(speed) {
-		// Показываем значение слайдера со знаком
-		const displayValue = speed > 0 ? `+${speed}` : speed;
-		this.speedLabel.textContent = displayValue;
+	updateDurationLabel(duration) {
+		this.durationLabel.textContent = duration;
 	}
 
-	initSpeed(speed) {
-		this.speedSlider.value = speed;
-		this.updateSpeedLabel(speed);
+	initDuration(duration) {
+		this.durationSlider.value = duration;
+		this.updateDurationLabel(duration);
 	}
 
 	updateZoomLabel(zoom) {
@@ -109,6 +120,11 @@ export class UIController {
 	}
 
 	initZoom(zoom) {
+		this.zoomSlider.value = zoom;
+		this.updateZoomLabel(zoom);
+	}
+
+	updateZoomSlider(zoom) {
 		this.zoomSlider.value = zoom;
 		this.updateZoomLabel(zoom);
 	}
@@ -121,12 +137,13 @@ export class UIController {
 		this.densifiedToggle.checked = useDensified;
 	}
 
+	initCameraFollowToggle(cameraFollow) {
+		this.cameraFollowToggle.checked = cameraFollow;
+	}
+
 	toggleControls() {
-		this.isControlsCollapsed = !this.isControlsCollapsed;
-		if (this.isControlsCollapsed) {
-			this.controls.classList.add('collapsed');
-		} else {
-			this.controls.classList.remove('collapsed');
-		}
+		if (!this.isControlsVisible) return; // Если скрыто - не переключать
+		this.isControlsOpen = !this.isControlsOpen;
+		this.updateControlsVisibility();
 	}
 }
