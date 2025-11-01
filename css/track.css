@@ -79,7 +79,7 @@ body.recording #map {
 	top: 0;
 	right: 0;
 	width: 320px;
-	height: 100vh;
+	height: 100dvh;
 	background: white;
 	z-index: 1500;
 	transform: translateX(100%);
