@@ -6,21 +6,28 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Маршрут Zličín → Mořina</title>
 	<link rel="icon" type="image/svg+xml" href="favicon.svg">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 	<link rel="stylesheet" href="css/track.css" />
 </head>
 
 <body>
 	<div id="map"></div>
-	<button id="toggleControlsBtn" class="hamburger-btn" title="Toggle Controls">☰</button>
+	<button id="toggleControlsBtn" class="hamburger-btn" title="Toggle Controls">
+		<span class="material-icons">menu</span>
+	</button>
 	<div class="controls">
 		<div class="sidebar-header">
 			<h2>Controls</h2>
 		</div>
 		<div class="controls-content">
 		<div class="button-row">
-			<button id="startBtn">▶ Animate</button>
-			<button id="recordBtn">⏺ Record</button>
+			<button id="startBtn">
+				<span class="material-icons">play_arrow</span> Animate
+			</button>
+			<button id="recordBtn">
+				<span class="material-icons">radio_button_checked</span> Record
+			</button>
 		</div>
 		<div class="speed-control">
 			<label>
@@ -66,9 +73,13 @@
 		</div>
 		<div class="gpx-upload">
 			<div class="gpx-buttons">
-				<label for="gpxFile" class="upload-btn">📁 Load GPX</label>
+				<label for="gpxFile" class="upload-btn">
+					<span class="material-icons">folder_open</span> Load GPX
+				</label>
 				<input type="file" id="gpxFile" accept=".gpx" style="display: none;">
-				<button id="deleteGpxBtn" class="delete-btn" title="Delete track">✕</button>
+				<button id="deleteGpxBtn" class="delete-btn" title="Delete track">
+					<span class="material-icons">close</span>
+				</button>
 			</div>
 			<span id="gpxFileName"></span>
 		</div>

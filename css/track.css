@@ -10,6 +10,31 @@ button, input, select, textarea {
 	font-family: inherit;
 }
 
+.material-icons {
+	font-size: inherit;
+	vertical-align: middle;
+	line-height: 1;
+}
+
+/* Универсальное выравнивание иконок и текста через flex */
+button,
+.upload-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+}
+
+button .material-icons,
+.upload-btn .material-icons,
+.delete-btn .material-icons {
+	font-size: 18px;
+}
+
+.hamburger-btn .material-icons {
+	font-size: 20px;
+}
+
 html {
 	background: black;
 }
@@ -200,7 +225,6 @@ button {
 	margin-bottom: 10px;
 	background: #4285f4;
 	font-size: 16px;
-	display: block;
 	width: 100%;
 }
 
@@ -216,9 +240,6 @@ button:disabled {
 .upload-btn,
 .delete-btn {
 	height: 40px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 	line-height: 1;
 }
 
