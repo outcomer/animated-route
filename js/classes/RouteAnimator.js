@@ -134,28 +134,16 @@ export class RouteAnimator {
 	complete() {
 		this.stop();
 		this.ui.setProgressComplete();
-		this.ui.showInfoBox();
 
-		if (this.state.cameraFollow) {
-			const allCoords = this.state.fullRoute.map(p => [p.lat, p.lng]);
-			const bounds = L.latLngBounds(allCoords);
-			const currentZoom = this.map.getZoom();
+		// Execute ending scenario
+		const showControlsCallback = () => this.ui.showControls();
 
-			this.map.flyToBounds(bounds, {
-				duration: 1.5,
-				maxZoom: currentZoom,
-				padding: [50, 50]
-			});
+		if (this.onCompleteCallback) {
+			this.onCompleteCallback(showControlsCallback);
+			this.onCompleteCallback = null;
+		} else {
+			this.trackViz.endingScenarioManager.execute(showControlsCallback);
 		}
-
-		setTimeout(() => {
-			if (this.onCompleteCallback) {
-				this.onCompleteCallback(() => this.ui.showControls());
-				this.onCompleteCallback = null;
-			} else {
-				this.ui.showControls();
-			}
-		}, 2000);
 	}
 
 	/**

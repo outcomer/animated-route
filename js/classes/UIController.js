@@ -4,7 +4,6 @@
 export class UIController {
 	constructor() {
 		this.controls = document.querySelector('.controls');
-		this.infoBox = document.querySelector('.info-box');
 		this.progress = document.getElementById('progress');
 		this.startBtn = document.getElementById('startBtn');
 		this.recordBtn = document.getElementById('recordBtn');
@@ -16,6 +15,7 @@ export class UIController {
 		this.densifiedToggle = document.getElementById('densifiedToggle');
 		this.cameraFollowToggle = document.getElementById('cameraFollowToggle');
 		this.mapStyleSelect = document.getElementById('mapStyleSelect');
+		this.endingScenarioSelect = document.getElementById('endingScenarioSelect');
 		this.gpxFileInput = document.getElementById('gpxFile');
 		this.gpxFileName = document.getElementById('gpxFileName');
 		this.deleteGpxBtn = document.getElementById('deleteGpxBtn');
@@ -64,20 +64,6 @@ export class UIController {
 
 		countdown.remove();
 		await new Promise(resolve => setTimeout(resolve, 1000));
-	}
-
-	/**
-	 * Show the info box with track metrics
-	 */
-	showInfoBox() {
-		this.infoBox.classList.remove('hidden');
-	}
-
-	/**
-	 * Hide the info box
-	 */
-	hideInfoBox() {
-		this.infoBox.classList.add('hidden');
 	}
 
 	/**
@@ -140,36 +126,6 @@ export class UIController {
 	}
 
 	/**
-	 * Update info box with track data
-	 * @param {Object} data - Track metrics data
-	 * @param {string} data.title - Track title
-	 * @param {number} data.distance - Distance in km
-	 * @param {Object} data.elevation - Elevation data
-	 * @param {number} data.elevation.gain - Elevation gain in meters
-	 * @param {number} data.elevation.loss - Elevation loss in meters
-	 * @param {string} data.movingSpeed - Average speed in km/h
-	 * @param {string} data.maxSpeed - Maximum speed in km/h
-	 * @param {string} data.movingTime - Moving time formatted
-	 * @param {string} data.totalTime - Total time formatted
-	 * @param {number} data.calories - Estimated calories burned
-	 */
-	updateInfoBox(data) {
-		this.infoBox.innerHTML = `
-			<h2>${data.title}</h2>
-			<p><span class="material-symbols-outlined" title="Distance">straighten</span> ${data.distance.toFixed(2)} km</p>
-			<p><span class="material-symbols-outlined" title="Elevation gain">trending_up</span> ${Math.round(data.elevation.gain)} m</p>
-			<p><span class="material-symbols-outlined" title="Elevation loss">trending_down</span> ${Math.round(data.elevation.loss)} m</p>
-			<p><span class="material-symbols-outlined" title="Average speed">speed</span> ${data.movingSpeed} km/h</p>
-			<p><span class="material-symbols-outlined" title="Maximum speed">flash_on</span> ${data.maxSpeed} km/h</p>
-			<p><span class="material-symbols-outlined" title="Time in motion">timer</span> ${data.movingTime}</p>
-			<p><span class="material-symbols-outlined" title="Total time">schedule</span> ${data.totalTime}</p>
-			<p><span class="material-symbols-outlined" title="Calories burned">whatshot</span> ~${data.calories} kcal</p>
-			<div class="progress" id="progress"></div>
-		`;
-		this.progress = document.getElementById('progress');
-	}
-
-	/**
 	 * Update duration label display
 	 * @param {number} duration - Animation duration in seconds
 	 */
@@ -218,6 +174,22 @@ export class UIController {
 	 */
 	initWeight(weight) {
 		this.weightInput.value = weight;
+	}
+
+	/**
+	 * Initialize ending scenario selector with value
+	 * @param {string} scenario - Ending scenario value
+	 */
+	initEndingScenario(scenario) {
+		this.endingScenarioSelect.value = scenario;
+	}
+
+	/**
+	 * Get current ending scenario value
+	 * @returns {string} Current ending scenario
+	 */
+	getEndingScenario() {
+		return this.endingScenarioSelect.value;
 	}
 
 	/**
