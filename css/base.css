@@ -1,0 +1,35 @@
+/* Base styles: reset, typography, global elements */
+
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&display=swap');
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+button, input, select, textarea {
+	font-family: inherit;
+}
+
+/* Material Symbols Icons base styles */
+[class^="material-symbols-"],
+[class*=" material-symbols-"] {
+	font-size: inherit;
+	vertical-align: middle;
+	line-height: 1;
+}
+
+html {
+	background: black;
+}
+
+body {
+	font-family: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	overflow: hidden;
+	background: white;
+}
+
+strong {
+	font-weight: bolder;
+}

@@ -1,0 +1,122 @@
+/* Button components: primary buttons, upload button, delete button, hamburger menu */
+
+button,
+.upload-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+}
+
+button [class^="material-symbols-"],
+button [class*=" material-symbols-"],
+.upload-btn [class^="material-symbols-"],
+.upload-btn [class*=" material-symbols-"],
+.delete-btn [class^="material-symbols-"],
+.delete-btn [class*=" material-symbols-"] {
+	font-size: 18px;
+}
+
+.hamburger-btn [class^="material-symbols-"],
+.hamburger-btn [class*=" material-symbols-"] {
+	font-size: 20px;
+}
+
+.hamburger-btn {
+	position: fixed;
+	top: 10px;
+	right: 10px;
+	background: black;
+	color: white;
+	border: none;
+	border-radius: 3px;
+	font-size: 15px;
+	cursor: pointer;
+	line-height: 1;
+	width: 30px;
+	height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 2000;
+	font-weight: bold;
+	padding: 0;
+}
+
+.hamburger-btn.hidden {
+	display: none;
+}
+
+button,
+.upload-btn,
+.delete-btn {
+	border: none;
+	border-radius: 6px;
+	color: white;
+	cursor: pointer;
+	transition: background 0.3s;
+}
+
+button {
+	white-space: nowrap;
+	padding: 10px 24px;
+	margin-bottom: 10px;
+	background: #4285f4;
+	font-size: 16px;
+	width: 100%;
+}
+
+button:hover {
+	background: #357abd;
+}
+
+button:disabled {
+	background: #ccc;
+	cursor: not-allowed;
+}
+
+.button-row {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 10px;
+}
+
+.button-row button {
+	flex: 1;
+}
+
+.upload-btn,
+.delete-btn {
+	height: 40px;
+	line-height: 1;
+}
+
+.upload-btn {
+	flex: 1;
+	padding: 10px 20px;
+	background: #4285f4;
+	text-align: center;
+	font-size: 14px;
+}
+
+.upload-btn:hover {
+	background: #357abd;
+}
+
+.delete-btn {
+	padding: 0;
+	margin: 0;
+	background: #ea4335;
+	font-size: 16px;
+	width: 40px;
+	min-width: 40px;
+	display: none;
+}
+
+.delete-btn.visible {
+	display: flex;
+}
+
+.delete-btn:hover {
+	background: #c5381e;
+}

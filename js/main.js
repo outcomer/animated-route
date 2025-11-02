@@ -1,4 +1,4 @@
-import { TrackVisualization } from './TrackVisualization.js';
+import { TrackVisualization } from './classes/TrackVisualization.js';
 
 /**
  * Application state configuration

@@ -2,6 +2,7 @@ import { GPXMetrics } from './GPXMetrics.js';
 import { UIController } from './UIController.js';
 import { RouteAnimator } from './RouteAnimator.js';
 import { GPXDensifier } from './GPXDensifier.js';
+import { EndingScenarioManager } from './EndingScenarioManager.js';
 
 const DEFAULT_WEIGHT = 80;
 const STORAGE_KEY = `${window.location.hostname}_appData`;
@@ -32,6 +33,7 @@ export class TrackVisualization {
 		this.ui = new UIController();
 		this.ui.initDuration(this.state.animationDuration);
 		this.ui.initZoom(this.state.routeZoom);
+		this.endingScenarioManager = new EndingScenarioManager(this.ui, this.map, this.state);
 		this.animator = new RouteAnimator(this.map, this.state, this.ui, this);
 		this.initAppData();
 		this.loadInitialData();
@@ -92,6 +94,7 @@ export class TrackVisualization {
 					useDensified: true,
 					cameraFollow: true,
 					mapStyle: 'light',
+					endingScenario: 'show_stats',
 					animationDuration: 60,
 					routeZoom: this.state.initialZoom
 				};
@@ -167,6 +170,9 @@ export class TrackVisualization {
 			this.ui.mapStyleSelect.value = appData.mapStyle;
 			this.changeMapStyle(appData.mapStyle);
 
+			const endingScenario = appData.endingScenario || 'show_stats';
+			this.ui.initEndingScenario(endingScenario);
+
 			this.state.animationDuration = appData.animationDuration;
 			this.ui.initDuration(appData.animationDuration);
 
@@ -225,7 +231,7 @@ export class TrackVisualization {
 		this.calculateAndDisplayMetrics(points);
 		this.addMarkers(points);
 		this.drawFullRoute(points, shouldFitBounds);
-		this.ui.showInfoBox();
+		this.endingScenarioManager.applyCurrentScenario();
 	}
 
 	/**
@@ -273,7 +279,7 @@ export class TrackVisualization {
 			const weight = this.loadAppData('weight') || DEFAULT_WEIGHT;
 			const calories = GPXMetrics.calculateCalories(distance, timeData.movingTime, elevation.gain, weight);
 
-			this.ui.updateInfoBox({
+			this.endingScenarioManager.updateInfoBox({
 				title: this.state.title,
 				distance: distance,
 				elevation: elevation,
@@ -419,6 +425,15 @@ export class TrackVisualization {
 			this.changeMapStyle(styleKey);
 			this.saveAppData('mapStyle', styleKey);
 		});
+
+		this.ui.endingScenarioSelect.addEventListener('change', (e) => {
+			const scenario = e.target.value;
+			this.saveAppData('endingScenario', scenario);
+			// Apply scenario immediately if track is loaded
+			if (this.state.fullRoute && this.state.fullRoute.length > 0) {
+				this.endingScenarioManager.applyCurrentScenario();
+			}
+		});
 	}
 
 	/**
@@ -441,7 +456,7 @@ export class TrackVisualization {
 		if (this.endMarker) {
 			this.map.removeLayer(this.endMarker);
 		}
-		this.ui.hideInfoBox();
+		this.endingScenarioManager.hideInfoBox();
 		this.ui.clearProgress();
 
 		const userZoom = this.map.getZoom();
@@ -556,7 +571,7 @@ export class TrackVisualization {
 
 		this.ui.gpxFileName.textContent = 'No track loaded';
 		this.ui.deleteGpxBtn.classList.remove('visible');
-		this.ui.hideInfoBox();
+		this.endingScenarioManager.hideInfoBox();
 
 		this.map.setView([49.997, 14.24], this.state.initialZoom);
 

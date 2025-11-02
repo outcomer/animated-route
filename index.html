@@ -8,7 +8,7 @@
 	<link rel="icon" type="image/svg+xml" href="favicon.svg">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-	<link rel="stylesheet" href="css/track.css" />
+	<link rel="stylesheet" href="css/main.css" />
 </head>
 
 <body>
@@ -71,6 +71,13 @@
 				<option value="topo">World Topo</option>
 			</select>
 		</div>
+		<div class="ending-scenario-control">
+			<label for="endingScenarioSelect">Ending scenario:</label>
+			<select id="endingScenarioSelect">
+				<option value="show_stats">Show Statistics</option>
+				<option value="hide_all">Hide All</option>
+			</select>
+		</div>
 		<div class="gpx-upload">
 			<div class="gpx-buttons">
 				<label for="gpxFile" class="upload-btn">
@@ -101,7 +108,7 @@
 		<div class="progress" id="progress"></div>
 	</div>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-	<script type="module" src="js/track.js"></script>
+	<script type="module" src="js/main.js"></script>
 </body>
 
 </html>

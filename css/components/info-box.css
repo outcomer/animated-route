@@ -1,0 +1,56 @@
+/* Info box with track statistics and metrics */
+
+.info-box {
+	position: absolute;
+	bottom: 30px;
+	left: 30px;
+	z-index: 1000;
+	background: rgba(255, 255, 255, 0.95);
+	padding: 20px 30px;
+	max-width: 90vw;
+	border-radius: 10px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	transition: opacity 0.8s;
+}
+
+.info-box.hidden {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.info-box h2 {
+	margin-bottom: 20px;
+	color: #333;
+	font-size: 20px;
+}
+
+.info-box p {
+	color: #666;
+	line-height: 1.3;
+	margin: 5px 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.info-box p [class^="material-symbols-"],
+.info-box p [class*=" material-symbols-"] {
+	font-size: 18px;
+	color: #fff;
+	cursor: help;
+	background: #323731;
+	border-radius: 50%;
+	width: 27px;
+	height: 27px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+	.info-box {
+		max-width: calc(100vw - 60px);
+		font-size: 14px;
+	}
+}
