@@ -21,10 +21,11 @@ export class UIController {
 		this.deleteGpxBtn = document.getElementById('deleteGpxBtn');
 		this.toggleControlsBtn = document.getElementById('toggleControlsBtn');
 
-		this.isControlsOpen = false;
+		this.isControlsOpen = true;
 		this.isControlsVisible = true;
 
 		this.initOutsideClickHandler();
+		this.updateControlsVisibility();
 	}
 
 	/**
@@ -128,7 +129,7 @@ export class UIController {
 	 * Set progress display to completion state
 	 */
 	setProgressComplete() {
-		this.progress.textContent = '✓ Route completed!';
+		this.progress.textContent = '';
 	}
 
 	/**
@@ -146,8 +147,8 @@ export class UIController {
 	 * @param {Object} data.elevation - Elevation data
 	 * @param {number} data.elevation.gain - Elevation gain in meters
 	 * @param {number} data.elevation.loss - Elevation loss in meters
-	 * @param {string} data.movingSpeed - Moving speed in km/h
-	 * @param {string} data.totalSpeed - Total average speed in km/h
+	 * @param {string} data.movingSpeed - Average speed in km/h
+	 * @param {string} data.maxSpeed - Maximum speed in km/h
 	 * @param {string} data.movingTime - Moving time formatted
 	 * @param {string} data.totalTime - Total time formatted
 	 * @param {number} data.calories - Estimated calories burned
@@ -155,11 +156,14 @@ export class UIController {
 	updateInfoBox(data) {
 		this.infoBox.innerHTML = `
 			<h2>${data.title}</h2>
-			<p><strong>Distance:</strong> ${data.distance.toFixed(2)} km</p>
-			<p><strong>Elevation, m (gain/loss):</strong> ${Math.round(data.elevation.gain)} / ${Math.round(data.elevation.loss)}</p>
-			<p><strong>Speed, km/h (moving/total):</strong> ${data.movingSpeed} / ${data.totalSpeed}</p>
-			<p><strong>Time (moving/total):</strong> ${data.movingTime} / ${data.totalTime}</p>
-			<p><strong>Calories burned:</strong> ~${data.calories} kcal</p>
+			<p><span class="material-symbols-outlined" title="Distance">straighten</span> ${data.distance.toFixed(2)} km</p>
+			<p><span class="material-symbols-outlined" title="Elevation gain">trending_up</span> ${Math.round(data.elevation.gain)} m</p>
+			<p><span class="material-symbols-outlined" title="Elevation loss">trending_down</span> ${Math.round(data.elevation.loss)} m</p>
+			<p><span class="material-symbols-outlined" title="Average speed">speed</span> ${data.movingSpeed} km/h</p>
+			<p><span class="material-symbols-outlined" title="Maximum speed">flash_on</span> ${data.maxSpeed} km/h</p>
+			<p><span class="material-symbols-outlined" title="Time in motion">timer</span> ${data.movingTime}</p>
+			<p><span class="material-symbols-outlined" title="Total time">schedule</span> ${data.totalTime}</p>
+			<p><span class="material-symbols-outlined" title="Calories burned">whatshot</span> ~${data.calories} kcal</p>
 			<div class="progress" id="progress"></div>
 		`;
 		this.progress = document.getElementById('progress');

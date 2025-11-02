@@ -43,7 +43,7 @@ export class GPXMetrics {
 	/**
 	 * Calculate time and speed metrics
 	 * @param {Array} points - Array of GPS points with time data
-	 * @returns {Object|null} Object with totalTime and movingTime in seconds, or null if insufficient data
+	 * @returns {Object|null} Object with totalTime, movingTime in seconds, and maxSpeed in km/h, or null if insufficient data
 	 */
 	static calculateTimeAndSpeed(points) {
 		const times = points.map(p => new Date(p.time).getTime()).filter(t => !isNaN(t));
@@ -51,17 +51,24 @@ export class GPXMetrics {
 
 		const totalTime = (times[times.length - 1] - times[0]) / 1000;
 		let movingTime = 0;
+		let maxSpeed = 0;
 
 		const speedThreshold = 1 / 3600;
 		for (let i = 1; i < points.length; i++) {
 			const distance = this.calculateDistance([points[i - 1], points[i]]);
 			const time = (new Date(points[i].time) - new Date(points[i - 1].time)) / 1000;
-			if (time > 0 && distance / time > speedThreshold) {
-				movingTime += time;
+			if (time > 0) {
+				const speedKmh = (distance / time) * 3600;
+				if (speedKmh > maxSpeed) {
+					maxSpeed = speedKmh;
+				}
+				if (distance / time > speedThreshold) {
+					movingTime += time;
+				}
 			}
 		}
 
-		return { totalTime, movingTime };
+		return { totalTime, movingTime, maxSpeed };
 	}
 
 	/**
