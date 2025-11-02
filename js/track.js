@@ -1,19 +1,19 @@
-// python -m http.server 8000
 import { TrackVisualization } from './TrackVisualization.js';
 
-// Конфигурация приложения
+/**
+ * Application state configuration
+ * @type {Object}
+ */
 const state = {
 	title: 'GPX Route Viewer',
-	animationDuration: 60, // Длительность анимации в секундах
-	cameraFollow: true, // Следить за маршрутом во время анимации
+	animationDuration: 60,
+	cameraFollow: true,
 	trackColor: 'rgb(0 0 0)',
-	initialZoom: 12, // Зум при инициализации карты
-	fullRoute: [],// Данные маршрута (заполняются при загрузке GPX)
+	initialZoom: 12,
+	fullRoute: [],
 	gpxData: null
 };
 
-// Устанавливаем title страницы
 document.title = state.title;
 
-// Инициализация приложения
 const app = new TrackVisualization(state);

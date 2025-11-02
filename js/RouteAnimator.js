@@ -1,67 +1,73 @@
-import { GPXMetrics } from './GPXMetrics.js';
-
-// Класс для управления анимацией маршрута
+/**
+ * Controller for route animation on the map
+ */
 export class RouteAnimator {
+	/**
+	 * Create a new RouteAnimator instance
+	 * @param {Object} map - Leaflet map instance
+	 * @param {Object} state - Application state
+	 * @param {UIController} ui - UI controller instance
+	 * @param {TrackVisualization} trackViz - TrackVisualization instance
+	 */
 	constructor(map, state, ui, trackViz) {
 		this.map = map;
 		this.state = state;
 		this.ui = ui;
-		this.trackViz = trackViz; // Ссылка на TrackVisualization
-		this.animationFrameId = null; // requestAnimationFrame ID
-		this.lastFrameTime = null; // Время последнего кадра
-		this.accumulatedTime = 0; // Накопленное время для продвижения к следующей точке
+		this.trackViz = trackViz;
+		this.animationFrameId = null;
+		this.lastFrameTime = null;
+		this.accumulatedTime = 0;
 		this.currentStep = 0;
 		this.animatedLine = null;
-		this.segments = []; // Массив отрисованных сегментов
+		this.segments = [];
 		this.isRunning = false;
 
-		// Canvas renderer для эффективной отрисовки
 		this.renderer = L.canvas();
 	}
 
+	/**
+	 * Start the route animation
+	 */
 	start() {
 		if (this.isRunning) return;
 
 		this.ui.startBtn.disabled = true;
 		this.isRunning = true;
 
-		// Очищаем предыдущие сегменты
 		this.clearSegments();
 
-		// Сбрасываем время
 		this.lastFrameTime = null;
 		this.accumulatedTime = 0;
 
-		// Запускаем анимацию через requestAnimationFrame
 		this.animationFrameId = requestAnimationFrame((timestamp) => this.animate(timestamp));
 	}
 
+	/**
+	 * Clear all animated segments from the map
+	 */
 	clearSegments() {
-		// Удаляем все сегменты с карты
 		this.segments.forEach(segment => this.map.removeLayer(segment));
 		this.segments = [];
 	}
 
-	// Главный цикл анимации на базе requestAnimationFrame
+	/**
+	 * Main animation loop using requestAnimationFrame
+	 * @param {number} timestamp - Current timestamp from requestAnimationFrame
+	 */
 	animate(timestamp) {
 		if (!this.isRunning) return;
 
-		// Инициализация времени на первом кадре
 		if (this.lastFrameTime === null) {
 			this.lastFrameTime = timestamp;
 		}
 
-		// Рассчитываем время с последнего кадра (в миллисекундах)
 		const deltaTime = timestamp - this.lastFrameTime;
 		this.lastFrameTime = timestamp;
 
-		// Накапливаем время
 		this.accumulatedTime += deltaTime;
 
-		// Рассчитываем время на одну точку (в мс)
 		const timePerPoint = this.calculateTimePerPoint();
 
-		// Проверяем сколько точек нужно продвинуть
 		while (this.accumulatedTime >= timePerPoint && this.isRunning) {
 			this.accumulatedTime -= timePerPoint;
 
@@ -73,21 +79,25 @@ export class RouteAnimator {
 			this.animateStep();
 		}
 
-		// Запрашиваем следующий кадр
 		if (this.isRunning) {
 			this.animationFrameId = requestAnimationFrame((ts) => this.animate(ts));
 		}
 	}
 
-	// Рассчитывает время на отрисовку одной точки (в мс)
-	// На основе общей длительности анимации
+	/**
+	 * Calculate time per point for animation based on total duration
+	 * @returns {number} Time per point in milliseconds
+	 */
 	calculateTimePerPoint() {
 		const totalPoints = this.state.fullRoute.length;
-		const durationMs = this.state.animationDuration * 1000; // Секунды в миллисекунды
+		const durationMs = this.state.animationDuration * 1000;
 
 		return durationMs / totalPoints;
 	}
 
+	/**
+	 * Animate a single step of the route
+	 */
 	animateStep() {
 		this.currentStep++;
 
@@ -95,11 +105,8 @@ export class RouteAnimator {
 			this.currentStep = this.state.fullRoute.length;
 		}
 
-		// Создаём coords из всех точек до текущей
 		const coords = this.state.fullRoute.slice(0, this.currentStep).map(p => [p.lat, p.lng]);
 
-		// Если линия уже существует - обновляем координаты
-		// Если нет - создаём новую
 		if (this.animatedLine) {
 			this.animatedLine.setLatLngs(coords);
 		} else {
@@ -115,19 +122,20 @@ export class RouteAnimator {
 		const percent = Math.round((this.currentStep / this.state.fullRoute.length) * 100);
 		this.ui.updateProgress(percent);
 
-		// Плавное панорамирование к текущей точке (только если включен режим следования)
 		if (this.state.cameraFollow && coords.length > 0) {
 			const lastPoint = coords[coords.length - 1];
 			this.map.panTo(lastPoint, { animate: true });
 		}
 	}
 
+	/**
+	 * Complete the animation and show final state
+	 */
 	complete() {
 		this.stop();
 		this.ui.setProgressComplete();
 		this.ui.showInfoBox();
 
-		// Если режим follow route - центруем весь трек без изменения зума
 		if (this.state.cameraFollow) {
 			const allCoords = this.state.fullRoute.map(p => [p.lat, p.lng]);
 			const bounds = L.latLngBounds(allCoords);
@@ -140,20 +148,19 @@ export class RouteAnimator {
 			});
 		}
 
-		// Ждём 2 секунды после окончания анимации
 		setTimeout(() => {
-			// Если есть коллбэк завершения (запись) - передаем ему управление
 			if (this.onCompleteCallback) {
-				// Передаем функцию показа контролов в callback
 				this.onCompleteCallback(() => this.ui.showControls());
 				this.onCompleteCallback = null;
 			} else {
-				// Обычная анимация - показываем контролы сразу
 				this.ui.showControls();
 			}
 		}, 2000);
 	}
 
+	/**
+	 * Stop the animation
+	 */
 	stop() {
 		this.isRunning = false;
 		if (this.animationFrameId) {

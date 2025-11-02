@@ -16,7 +16,6 @@ button, input, select, textarea {
 	line-height: 1;
 }
 
-/* Универсальное выравнивание иконок и текста через flex */
 button,
 .upload-btn {
 	display: inline-flex;
@@ -436,7 +435,6 @@ button:disabled {
 	}
 }
 
-/* Mobile devices - свернутая панель по умолчанию */
 @media (max-width: 768px) {
 	.info-box {
 		max-width: calc(100vw - 60px);

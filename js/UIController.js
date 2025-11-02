@@ -1,4 +1,6 @@
-// Класс для управления UI элементами
+/**
+ * Controller for managing UI elements and interactions
+ */
 export class UIController {
 	constructor() {
 		this.controls = document.querySelector('.controls');
@@ -19,11 +21,29 @@ export class UIController {
 		this.deleteGpxBtn = document.getElementById('deleteGpxBtn');
 		this.toggleControlsBtn = document.getElementById('toggleControlsBtn');
 
-		// Состояние сайдбара
 		this.isControlsOpen = false;
-		this.isControlsVisible = true; // Видимость кнопки и сайдбара
+		this.isControlsVisible = true;
+
+		this.initOutsideClickHandler();
 	}
 
+	/**
+	 * Initialize click handler to close sidebar when clicking outside
+	 */
+	initOutsideClickHandler() {
+		document.addEventListener('click', (e) => {
+			if (this.isControlsOpen &&
+				!this.controls.contains(e.target) &&
+				!this.toggleControlsBtn.contains(e.target)) {
+				this.isControlsOpen = false;
+				this.updateControlsVisibility();
+			}
+		});
+	}
+
+	/**
+	 * Show animated countdown (3, 2, 1) before animation starts
+	 */
 	async showCountdown() {
 		this.hideControls();
 
@@ -45,26 +65,41 @@ export class UIController {
 		await new Promise(resolve => setTimeout(resolve, 1000));
 	}
 
+	/**
+	 * Show the info box with track metrics
+	 */
 	showInfoBox() {
 		this.infoBox.classList.remove('hidden');
 	}
 
+	/**
+	 * Hide the info box
+	 */
 	hideInfoBox() {
 		this.infoBox.classList.add('hidden');
 	}
 
+	/**
+	 * Show controls panel and open sidebar
+	 */
 	showControls() {
 		this.isControlsVisible = true;
-		this.isControlsOpen = true; // Открываем сайдбар после анимации
+		this.isControlsOpen = true;
 		this.updateControlsVisibility();
 	}
 
+	/**
+	 * Hide controls panel and close sidebar
+	 */
 	hideControls() {
 		this.isControlsVisible = false;
 		this.isControlsOpen = false;
 		this.updateControlsVisibility();
 	}
 
+	/**
+	 * Update controls visibility based on current state
+	 */
 	updateControlsVisibility() {
 		if (this.isControlsVisible) {
 			this.toggleControlsBtn.classList.remove('hidden');
@@ -81,18 +116,42 @@ export class UIController {
 		}
 	}
 
+	/**
+	 * Update progress display during animation
+	 * @param {number} percent - Completion percentage (0-100)
+	 */
 	updateProgress(percent) {
 		this.progress.textContent = `${percent}% completed`;
 	}
 
+	/**
+	 * Set progress display to completion state
+	 */
 	setProgressComplete() {
 		this.progress.textContent = '✓ Route completed!';
 	}
 
+	/**
+	 * Clear progress display
+	 */
 	clearProgress() {
 		this.progress.textContent = '';
 	}
 
+	/**
+	 * Update info box with track data
+	 * @param {Object} data - Track metrics data
+	 * @param {string} data.title - Track title
+	 * @param {number} data.distance - Distance in km
+	 * @param {Object} data.elevation - Elevation data
+	 * @param {number} data.elevation.gain - Elevation gain in meters
+	 * @param {number} data.elevation.loss - Elevation loss in meters
+	 * @param {string} data.movingSpeed - Moving speed in km/h
+	 * @param {string} data.totalSpeed - Total average speed in km/h
+	 * @param {string} data.movingTime - Moving time formatted
+	 * @param {string} data.totalTime - Total time formatted
+	 * @param {number} data.calories - Estimated calories burned
+	 */
 	updateInfoBox(data) {
 		this.infoBox.innerHTML = `
 			<h2>${data.title}</h2>
@@ -106,43 +165,78 @@ export class UIController {
 		this.progress = document.getElementById('progress');
 	}
 
+	/**
+	 * Update duration label display
+	 * @param {number} duration - Animation duration in seconds
+	 */
 	updateDurationLabel(duration) {
 		this.durationLabel.textContent = duration;
 	}
 
+	/**
+	 * Initialize duration slider with value
+	 * @param {number} duration - Initial duration in seconds
+	 */
 	initDuration(duration) {
 		this.durationSlider.value = duration;
 		this.updateDurationLabel(duration);
 	}
 
+	/**
+	 * Update zoom label display
+	 * @param {number} zoom - Zoom level
+	 */
 	updateZoomLabel(zoom) {
 		this.zoomLabel.textContent = zoom;
 	}
 
+	/**
+	 * Initialize zoom slider with value
+	 * @param {number} zoom - Initial zoom level
+	 */
 	initZoom(zoom) {
 		this.zoomSlider.value = zoom;
 		this.updateZoomLabel(zoom);
 	}
 
+	/**
+	 * Update zoom slider and label
+	 * @param {number} zoom - New zoom level
+	 */
 	updateZoomSlider(zoom) {
 		this.zoomSlider.value = zoom;
 		this.updateZoomLabel(zoom);
 	}
 
+	/**
+	 * Initialize weight input with value
+	 * @param {number} weight - User weight in kg
+	 */
 	initWeight(weight) {
 		this.weightInput.value = weight;
 	}
 
+	/**
+	 * Initialize densified track toggle
+	 * @param {boolean} useDensified - Whether to use densified track
+	 */
 	initDensifiedToggle(useDensified) {
 		this.densifiedToggle.checked = useDensified;
 	}
 
+	/**
+	 * Initialize camera follow toggle
+	 * @param {boolean} cameraFollow - Whether camera should follow route
+	 */
 	initCameraFollowToggle(cameraFollow) {
 		this.cameraFollowToggle.checked = cameraFollow;
 	}
 
+	/**
+	 * Toggle controls panel open/closed state
+	 */
 	toggleControls() {
-		if (!this.isControlsVisible) return; // Если скрыто - не переключать
+		if (!this.isControlsVisible) return;
 		this.isControlsOpen = !this.isControlsOpen;
 		this.updateControlsVisibility();
 	}

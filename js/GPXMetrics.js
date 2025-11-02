@@ -1,10 +1,16 @@
-// Класс для расчёта метрик из GPX данных
+/**
+ * Utility class for calculating metrics from GPX data
+ */
 export class GPXMetrics {
+	/**
+	 * Calculate total distance using Haversine formula
+	 * @param {Array} coords - Array of GPS coordinates
+	 * @returns {number} Total distance in kilometers
+	 */
 	static calculateDistance(coords) {
-		// Haversine formula для вычисления расстояния
 		let totalDistance = 0;
 		for (let i = 1; i < coords.length; i++) {
-			const R = 6371; // Радиус Земли в км
+			const R = 6371;
 			const lat1 = coords[i - 1].lat * Math.PI / 180;
 			const lat2 = coords[i].lat * Math.PI / 180;
 			const deltaLat = (coords[i].lat - coords[i - 1].lat) * Math.PI / 180;
@@ -19,6 +25,11 @@ export class GPXMetrics {
 		return totalDistance;
 	}
 
+	/**
+	 * Calculate elevation gain and loss
+	 * @param {Array} points - Array of GPS points with elevation data
+	 * @returns {Object} Object with gain and loss properties in meters
+	 */
 	static calculateElevation(points) {
 		let gain = 0, loss = 0;
 		for (let i = 1; i < points.length; i++) {
@@ -29,15 +40,19 @@ export class GPXMetrics {
 		return { gain, loss };
 	}
 
+	/**
+	 * Calculate time and speed metrics
+	 * @param {Array} points - Array of GPS points with time data
+	 * @returns {Object|null} Object with totalTime and movingTime in seconds, or null if insufficient data
+	 */
 	static calculateTimeAndSpeed(points) {
 		const times = points.map(p => new Date(p.time).getTime()).filter(t => !isNaN(t));
 		if (times.length < 2) return null;
 
-		const totalTime = (times[times.length - 1] - times[0]) / 1000; // в секундах
+		const totalTime = (times[times.length - 1] - times[0]) / 1000;
 		let movingTime = 0;
 
-		// Порог скорости для определения движения: 1 км/ч
-		const speedThreshold = 1 / 3600; // км/с
+		const speedThreshold = 1 / 3600;
 		for (let i = 1; i < points.length; i++) {
 			const distance = this.calculateDistance([points[i - 1], points[i]]);
 			const time = (new Date(points[i].time) - new Date(points[i - 1].time)) / 1000;
@@ -49,11 +64,17 @@ export class GPXMetrics {
 		return { totalTime, movingTime };
 	}
 
+	/**
+	 * Calculate estimated calories burned based on cycling activity
+	 * @param {number} distance - Distance in kilometers
+	 * @param {number} movingTime - Moving time in seconds
+	 * @param {number} elevationGain - Elevation gain in meters
+	 * @param {number} weight - User weight in kilograms
+	 * @returns {number} Estimated calories burned
+	 */
 	static calculateCalories(distance, movingTime, elevationGain, weight) {
-		// Средняя скорость движения в км/ч
 		const avgSpeed = distance / (movingTime / 3600);
 
-		// Определяем MET на основе скорости
 		let met;
 		if (avgSpeed < 16) met = 4;
 		else if (avgSpeed < 19) met = 6;
@@ -61,16 +82,19 @@ export class GPXMetrics {
 		else if (avgSpeed < 25) met = 10;
 		else met = 12;
 
-		// Базовые калории: MET × вес(кг) × время(часы)
 		const baseCalories = met * weight * (movingTime / 3600);
 
-		// Калории от набора высоты для велосипеда
 		const bikeWeight = 10;
 		const climbCalories = (weight + bikeWeight) * elevationGain * 0.1 * 0.6;
 
 		return Math.round(baseCalories + climbCalories);
 	}
 
+	/**
+	 * Format time in seconds to HH:MM:SS string
+	 * @param {number} seconds - Time in seconds
+	 * @returns {string} Formatted time string
+	 */
 	static formatTime(seconds) {
 		const h = Math.floor(seconds / 3600);
 		const m = Math.floor((seconds % 3600) / 60);
