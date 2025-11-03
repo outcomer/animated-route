@@ -80,6 +80,10 @@
 				<option value="squint" selected>Squint</option>
 			</select>
 		</div>
+		<div class="animation-counter">
+			<label>Total animations played:</label>
+			<span id="animationCount">...</span>
+		</div>
 		<div class="gpx-upload">
 			<div class="gpx-buttons">
 				<label for="gpxFile" class="upload-btn">
@@ -116,6 +120,11 @@
 	<div class="passport-stats"></div>
 	<div class="squint-frame"></div>
 	<div class="squint-stats"></div>
+	<!-- Firebase SDK -->
+	<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check-compat.js"></script>
+
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 	<script type="module" src="js/main.js"></script>
 </body>

@@ -20,6 +20,7 @@ export class UIController {
 		this.gpxFileName = document.getElementById('gpxFileName');
 		this.deleteGpxBtn = document.getElementById('deleteGpxBtn');
 		this.toggleControlsBtn = document.getElementById('toggleControlsBtn');
+		this.animationCountDisplay = document.getElementById('animationCount');
 
 		this.isControlsOpen = true;
 		this.isControlsVisible = true;
@@ -215,5 +216,15 @@ export class UIController {
 		if (!this.isControlsVisible) return;
 		this.isControlsOpen = !this.isControlsOpen;
 		this.updateControlsVisibility();
+	}
+
+	/**
+	 * Update animation counter display
+	 * @param {number} count - Current animation count
+	 */
+	updateAnimationCount(count) {
+		if (this.animationCountDisplay) {
+			this.animationCountDisplay.textContent = count.toLocaleString();
+		}
 	}
 }

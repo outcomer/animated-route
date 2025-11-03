@@ -135,6 +135,9 @@ export class RouteAnimator {
 		this.stop();
 		this.ui.setProgressComplete();
 
+		// Increment Firebase counter when animation completes
+		this.trackViz.analytics.incrementAnimationCount();
+
 		// Execute ending scenario
 		const showControlsCallback = () => this.ui.showControls();
 

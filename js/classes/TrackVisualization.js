@@ -3,6 +3,7 @@ import { UIController } from './UIController.js';
 import { RouteAnimator } from './RouteAnimator.js';
 import { GPXDensifier } from './GPXDensifier.js';
 import { EndingScenarioManager } from './EndingScenarioManager.js';
+import { FirebaseAnalytics } from './FirebaseAnalytics.js';
 
 const DEFAULT_WEIGHT = 80;
 const STORAGE_KEY = `${window.location.hostname}_appData`;
@@ -35,10 +36,49 @@ export class TrackVisualization {
 		this.ui.initZoom(this.state.routeZoom);
 		this.endingScenarioManager = new EndingScenarioManager(this.ui, this.map, this.state);
 		this.animator = new RouteAnimator(this.map, this.state, this.ui, this);
+		this.analytics = new FirebaseAnalytics();
+		this.initFirebase();
 		this.initAppData();
 		this.loadInitialData();
 		this.checkRecordingSupport();
 		this.attachEventListeners();
+	}
+
+	/**
+	 * Initialize Firebase connection and load animation count
+	 */
+	initFirebase() {
+		const firebaseConfig = {
+			apiKey: "AIzaSyBjqALbMVzjipKfpo4i2LnVEqpPSebaDX0",
+			authDomain: "my-own-data-297a0.firebaseapp.com",
+			databaseURL: "https://my-own-data-297a0-default-rtdb.europe-west1.firebasedatabase.app",
+			projectId: "my-own-data-297a0",
+			storageBucket: "my-own-data-297a0.firebasestorage.app",
+			messagingSenderId: "448737941264",
+			appId: "1:448737941264:web:17dcbb310323c7dfcdb795",
+			measurementId: "G-M2PYX74Y85"
+		};
+
+		// reCAPTCHA v3 Site Key
+		const recaptchaSiteKey = "6LfZqQAsAAAAAI_j32eMciS6MWy2nP6Enh9W8J7S";
+
+		// Initialize Firebase with App Check
+		const initialized = this.analytics.init(firebaseConfig, recaptchaSiteKey);
+
+		if (initialized) {
+			// Load current count
+			this.analytics.getAnimationCount().then(count => {
+				this.ui.updateAnimationCount(count);
+			});
+
+			// Listen to real-time updates (if other users increment)
+			this.analytics.onAnimationCountChange((count) => {
+				this.ui.updateAnimationCount(count);
+			});
+		} else {
+			// If Firebase fails, show 0
+			this.ui.updateAnimationCount(0);
+		}
 	}
 
 	/**

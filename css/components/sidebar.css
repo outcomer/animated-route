@@ -221,3 +221,27 @@
 .ending-scenario-control select:hover {
 	border-color: #4285f4;
 }
+
+/* Animation counter */
+.animation-counter {
+	margin-top: 10px;
+	padding: 10px;
+	background: #f5f5f5;
+	border-radius: 6px;
+	text-align: center;
+	font-size: 14px;
+}
+
+.animation-counter label {
+	display: block;
+	margin-bottom: 4px;
+	color: #666;
+	font-weight: 500;
+}
+
+.animation-counter #animationCount {
+	display: block;
+	font-size: 24px;
+	font-weight: 600;
+	color: #4285f4;
+}
