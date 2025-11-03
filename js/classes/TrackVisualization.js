@@ -275,7 +275,7 @@ export class TrackVisualization {
 		const timeData = GPXMetrics.calculateTimeAndSpeed(points);
 
 		if (timeData) {
-			const movingSpeed = (distance / (timeData.movingTime / 3600)).toFixed(2);
+			const movingSpeed = (distance / (timeData.movingTime / 3600)).toFixed(1);
 			const weight = this.loadAppData('weight') || DEFAULT_WEIGHT;
 			const calories = GPXMetrics.calculateCalories(distance, timeData.movingTime, elevation.gain, weight);
 
@@ -284,7 +284,7 @@ export class TrackVisualization {
 				distance: distance,
 				elevation: elevation,
 				movingSpeed: movingSpeed,
-				maxSpeed: timeData.maxSpeed.toFixed(2),
+				maxSpeed: timeData.maxSpeed.toFixed(1),
 				movingTime: GPXMetrics.formatTime(timeData.movingTime),
 				totalTime: GPXMetrics.formatTime(timeData.totalTime),
 				calories: calories

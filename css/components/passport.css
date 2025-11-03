@@ -67,12 +67,13 @@
 	bottom: 0;
 	left: 0;
 	right: 0;
-	padding: 18px 80px;
+	height: 60px;
+	padding: 5px;
+	display: none;
 	justify-content: center;
 	align-items: center;
 	z-index: 1300;
-	gap: 20px;
-	display: none;
+	gap: 0 20px;
 }
 
 .passport-stats.visible {
@@ -98,7 +99,7 @@
 .passport-stat {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 0 8px;
 	color: white;
 	font-size: 16px;
 	font-weight: 500;
@@ -112,8 +113,7 @@
 
 @media (max-width: 1200px) {
 	.passport-stats {
-		padding: 12px 60px;
-		gap: 15px;
+		gap: 0 15px;
 	}
 
 	.passport-stat {
@@ -126,15 +126,10 @@
 }
 
 @media (max-width: 768px) {
-	.passport-frame {
-		border-width: 40px;
-	}
 
 	.passport-stats {
-		padding: 10px 50px;
-		gap: 10px;
+		gap: 0 10px;
 		flex-wrap: wrap;
-		justify-content: center;
 	}
 
 	.passport-stat {
