@@ -23,30 +23,30 @@ export class EndingScenarioManager {
 	 * Hide all scenario elements (use before animation starts)
 	 */
 	hideAllScenarios() {
-		this.hideInfoBox();
-		this.hidePassport();
-		this.hideSquint();
+		this._hideInfoBoxUI();
+		this._hidePassportUI();
+		this._hideSquintUI();
 	}
 
 	/**
-	 * Show the info box
+	 * Show the info box UI
 	 */
-	showInfoBox() {
+	_showInfoBoxUI() {
 		this.infoBox.classList.add('visible');
 	}
 
 	/**
-	 * Hide the info box
+	 * Hide the info box UI
 	 */
-	hideInfoBox() {
+	_hideInfoBoxUI() {
 		this.infoBox.classList.remove('visible');
 	}
 
 	/**
-	 * Update info box with track metrics
+	 * Update info box with track metrics data
 	 * @param {Object} data - Track metrics data
 	 */
-	updateInfoBox(data) {
+	_updateInfoBoxData(data) {
 		const progress = this.infoBox.querySelector('#progress');
 		this.infoBox.innerHTML = `
 			<h2>${data.title}</h2>
@@ -77,10 +77,10 @@ export class EndingScenarioManager {
 				this.showInfoBoxScenario(showControlsCallback);
 				break;
 			case 'passport':
-				this.showPassport(showControlsCallback);
+				this.showPassportScenario(showControlsCallback);
 				break;
 			case 'squint':
-				this.showSquint(showControlsCallback);
+				this.showSquintScenario(showControlsCallback);
 				break;
 			default:
 				this.showNone(showControlsCallback);
@@ -94,22 +94,22 @@ export class EndingScenarioManager {
 		const scenario = this.ui.getEndingScenario();
 
 		// Reset all scenarios first
-		this.hideInfoBox();
-		this.hidePassport();
-		this.hideSquint();
+		this._hideInfoBoxUI();
+		this._hidePassportUI();
+		this._hideSquintUI();
 
 		switch (scenario) {
 			case 'none':
 				// Everything is hidden
 				break;
 			case 'info_box':
-				this.showInfoBox();
+				this._showInfoBoxUI();
 				break;
 			case 'passport':
-				this.showPassportFrame();
+				this._showPassportUI();
 				break;
 			case 'squint':
-				this.showSquintFrame();
+				this._showSquintUI();
 				break;
 			default:
 				// Everything is hidden by default
@@ -123,7 +123,7 @@ export class EndingScenarioManager {
 	 */
 	showInfoBoxScenario(showControlsCallback) {
 		// Show info box with statistics
-		this.showInfoBox();
+		this._showInfoBoxUI();
 
 		// Fit map to route bounds
 		if (this.state.cameraFollow) {
@@ -152,7 +152,7 @@ export class EndingScenarioManager {
 	 */
 	showNone(showControlsCallback) {
 		// Hide info box
-		this.hideInfoBox();
+		this._hideInfoBoxUI();
 
 		// Fit map to route bounds
 		if (this.state.cameraFollow) {
@@ -176,10 +176,10 @@ export class EndingScenarioManager {
 	}
 
 	/**
-	 * Update passport stats bar with track metrics
+	 * Update passport and squint stats bars with track metrics data
 	 * @param {Object} data - Track metrics data
 	 */
-	updatePassportStats(data) {
+	_updatePassportData(data) {
 		const statsHTML = `
 			<div class="passport-stat">
 				<span class="material-symbols-outlined" title="Distance">straighten</span>
@@ -219,21 +219,21 @@ export class EndingScenarioManager {
 	}
 
 	/**
-	 * Show passport frame
+	 * Show passport frame UI
 	 */
-	showPassportFrame() {
+	_showPassportUI() {
 		this.passportFrame.classList.add('visible');
 		this.passportStats.classList.add('visible');
 	}
 
 	/**
-	 * Show passport ending scenario
+	 * Passport ending scenario
 	 * @param {Function} showControlsCallback - Callback to show controls
 	 */
-	showPassport(showControlsCallback) {
+	showPassportScenario(showControlsCallback) {
 		const showFrame = () => {
 			// Show passport frame and stats
-			this.showPassportFrame();
+			this._showPassportUI();
 
 			// Show controls after delay
 			setTimeout(() => {
@@ -262,29 +262,29 @@ export class EndingScenarioManager {
 	}
 
 	/**
-	 * Hide passport frame and stats
+	 * Hide passport frame and stats UI
 	 */
-	hidePassport() {
+	_hidePassportUI() {
 		this.passportFrame.classList.remove('visible');
 		this.passportStats.classList.remove('visible');
 	}
 
 	/**
-	 * Show squint frame
+	 * Show squint frame UI
 	 */
-	showSquintFrame() {
+	_showSquintUI() {
 		this.squintFrame.classList.add('visible');
 		this.squintStats.classList.add('visible');
 	}
 
 	/**
-	 * Show squint ending scenario
+	 * Squint ending scenario
 	 * @param {Function} showControlsCallback - Callback to show controls
 	 */
-	showSquint(showControlsCallback) {
+	showSquintScenario(showControlsCallback) {
 		const showFrame = () => {
 			// Show squint frame and stats
-			this.showSquintFrame();
+			this._showSquintUI();
 
 			// Show controls after delay
 			setTimeout(() => {
@@ -313,9 +313,9 @@ export class EndingScenarioManager {
 	}
 
 	/**
-	 * Hide squint frame and stats
+	 * Hide squint frame and stats UI
 	 */
-	hideSquint() {
+	_hideSquintUI() {
 		this.squintFrame.classList.remove('visible');
 		this.squintStats.classList.remove('visible');
 	}

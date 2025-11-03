@@ -305,8 +305,8 @@ export class TrackVisualization {
 				calories: calories
 			};
 
-			this.endingScenarioManager.updateInfoBox(statsData);
-			this.endingScenarioManager.updatePassportStats(statsData);
+			this.endingScenarioManager._updateInfoBoxData(statsData);
+			this.endingScenarioManager._updatePassportData(statsData);
 		}
 	}
 
