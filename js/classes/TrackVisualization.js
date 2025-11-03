@@ -37,7 +37,22 @@ export class TrackVisualization {
 		this.animator = new RouteAnimator(this.map, this.state, this.ui, this);
 		this.initAppData();
 		this.loadInitialData();
+		this.checkRecordingSupport();
 		this.attachEventListeners();
+	}
+
+	/**
+	 * Check if screen recording is supported and disable button if not
+	 */
+	checkRecordingSupport() {
+		const isSupported = navigator.mediaDevices &&
+							typeof navigator.mediaDevices.getDisplayMedia === 'function';
+
+		if (!isSupported && this.ui.recordBtn) {
+			this.ui.recordBtn.disabled = true;
+			this.ui.recordBtn.title = 'Screen recording is not supported on mobile devices';
+			console.log('Screen recording not supported on this device');
+		}
 	}
 
 	/**
