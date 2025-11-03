@@ -119,8 +119,9 @@ export class TrackVisualization {
 
 		this.map.on('zoomend', () => {
 			const currentZoom = this.map.getZoom();
-			this.state.routeZoom = currentZoom;
-			this.ui.updateZoomSlider(currentZoom);
+			// Update slider value - this will trigger input event which saves to storage
+			this.ui.zoomSlider.value = currentZoom;
+			this.ui.zoomSlider.dispatchEvent(new Event('input'));
 		});
 	}
 
@@ -410,10 +411,15 @@ export class TrackVisualization {
 		});
 
 		this.ui.zoomSlider.addEventListener('input', (e) => {
-			this.state.routeZoom = parseInt(e.target.value);
-			this.ui.updateZoomLabel(this.state.routeZoom);
-			this.saveAppData('routeZoom', this.state.routeZoom);
-			this.map.setZoom(this.state.routeZoom);
+			const newZoom = parseInt(e.target.value);
+			this.state.routeZoom = newZoom;
+			this.ui.updateZoomLabel(newZoom);
+			this.saveAppData('routeZoom', newZoom);
+
+			// Only set zoom if it's different to avoid infinite loop
+			if (this.map.getZoom() !== newZoom) {
+				this.map.setZoom(newZoom);
+			}
 		});
 
 		this.ui.weightInput.addEventListener('input', (e) => {
