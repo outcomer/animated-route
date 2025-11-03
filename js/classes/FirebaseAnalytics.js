@@ -1,3 +1,6 @@
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+import { getDatabase, ref, get, runTransaction, onValue } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js';
+
 /**
  * Firebase Analytics helper for tracking animation statistics
  */
@@ -7,41 +10,19 @@ export class FirebaseAnalytics {
 	 */
 	constructor() {
 		this.db = null;
+		this.app = null;
 		this.isInitialized = false;
 	}
 
 	/**
 	 * Initialize Firebase with your project configuration
 	 * @param {Object} config - Firebase configuration object
-	 * @param {string} recaptchaSiteKey - reCAPTCHA v3 site key (optional)
 	 */
-	init(config, recaptchaSiteKey = null) {
+	init(config) {
 		try {
-			if (!window.firebase) {
-				console.warn('Firebase SDK not loaded');
-				return false;
-			}
-
 			// Initialize Firebase
-			firebase.initializeApp(config);
-			this.db = firebase.database();
-
-			// Initialize App Check if reCAPTCHA key is provided
-			if (recaptchaSiteKey && window.firebase.appCheck) {
-				try {
-					const appCheck = firebase.appCheck();
-
-					// For development: enable debug mode
-					if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-						self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-					}
-
-					appCheck.activate(recaptchaSiteKey, true); // true = auto-refresh tokens
-					console.log('Firebase App Check activated with reCAPTCHA v3');
-				} catch (error) {
-					console.warn('Failed to activate App Check:', error);
-				}
-			}
+			this.app = initializeApp(config);
+			this.db = getDatabase(this.app);
 
 			this.isInitialized = true;
 			console.log('Firebase initialized successfully');
@@ -63,16 +44,16 @@ export class FirebaseAnalytics {
 		}
 
 		try {
-			const counterRef = this.db.ref('statistics/animationCount');
+			const counterRef = ref(this.db, 'statistics/animationCount');
 
 			// Use transaction to safely increment counter
-			const snapshot = await counterRef.transaction((currentValue) => {
+			const result = await runTransaction(counterRef, (currentValue) => {
 				return (currentValue || 0) + 1;
 			});
 
-			if (snapshot.committed) {
-				console.log('Animation count incremented to:', snapshot.snapshot.val());
-				return snapshot.snapshot.val();
+			if (result.committed) {
+				console.log('Animation count incremented to:', result.snapshot.val());
+				return result.snapshot.val();
 			}
 
 			return null;
@@ -93,8 +74,8 @@ export class FirebaseAnalytics {
 		}
 
 		try {
-			const counterRef = this.db.ref('statistics/animationCount');
-			const snapshot = await counterRef.once('value');
+			const counterRef = ref(this.db, 'statistics/animationCount');
+			const snapshot = await get(counterRef);
 			return snapshot.val() || 0;
 		} catch (error) {
 			console.error('Error getting animation count:', error);
@@ -113,8 +94,8 @@ export class FirebaseAnalytics {
 		}
 
 		try {
-			const counterRef = this.db.ref('statistics/animationCount');
-			counterRef.on('value', (snapshot) => {
+			const counterRef = ref(this.db, 'statistics/animationCount');
+			onValue(counterRef, (snapshot) => {
 				const count = snapshot.val() || 0;
 				callback(count);
 			});
@@ -133,9 +114,10 @@ export class FirebaseAnalytics {
 		}
 
 		try {
-			const logsRef = this.db.ref('logs/animations');
-			await logsRef.push({
-				timestamp: firebase.database.ServerValue.TIMESTAMP,
+			const logsRef = ref(this.db, 'logs/animations');
+			const { push, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js');
+			await push(logsRef, {
+				timestamp: serverTimestamp(),
 				event: 'animation_start',
 				...metadata
 			});

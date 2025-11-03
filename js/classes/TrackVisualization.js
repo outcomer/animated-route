@@ -49,21 +49,11 @@ export class TrackVisualization {
 	 */
 	initFirebase() {
 		const firebaseConfig = {
-			apiKey: "AIzaSyBjqALbMVzjipKfpo4i2LnVEqpPSebaDX0",
-			authDomain: "my-own-data-297a0.firebaseapp.com",
 			databaseURL: "https://my-own-data-297a0-default-rtdb.europe-west1.firebasedatabase.app",
-			projectId: "my-own-data-297a0",
-			storageBucket: "my-own-data-297a0.firebasestorage.app",
-			messagingSenderId: "448737941264",
-			appId: "1:448737941264:web:17dcbb310323c7dfcdb795",
-			measurementId: "G-M2PYX74Y85"
 		};
 
-		// reCAPTCHA v3 Site Key
-		const recaptchaSiteKey = "6LfZqQAsAAAAAI_j32eMciS6MWy2nP6Enh9W8J7S";
-
-		// Initialize Firebase with App Check
-		const initialized = this.analytics.init(firebaseConfig, recaptchaSiteKey);
+		// Initialize Firebase
+		const initialized = this.analytics.init(firebaseConfig);
 
 		if (initialized) {
 			// Load current count
