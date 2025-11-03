@@ -94,7 +94,7 @@ export class TrackVisualization {
 					useDensified: true,
 					cameraFollow: true,
 					mapStyle: 'light',
-					endingScenario: 'show_stats',
+					endingScenario: 'none',
 					animationDuration: 60,
 					routeZoom: this.state.initialZoom
 				};
@@ -170,7 +170,7 @@ export class TrackVisualization {
 			this.ui.mapStyleSelect.value = appData.mapStyle;
 			this.changeMapStyle(appData.mapStyle);
 
-			const endingScenario = appData.endingScenario || 'show_stats';
+			const endingScenario = appData.endingScenario || 'none';
 			this.ui.initEndingScenario(endingScenario);
 
 			this.state.animationDuration = appData.animationDuration;
@@ -279,7 +279,7 @@ export class TrackVisualization {
 			const weight = this.loadAppData('weight') || DEFAULT_WEIGHT;
 			const calories = GPXMetrics.calculateCalories(distance, timeData.movingTime, elevation.gain, weight);
 
-			this.endingScenarioManager.updateInfoBox({
+			const statsData = {
 				title: this.state.title,
 				distance: distance,
 				elevation: elevation,
@@ -288,7 +288,10 @@ export class TrackVisualization {
 				movingTime: GPXMetrics.formatTime(timeData.movingTime),
 				totalTime: GPXMetrics.formatTime(timeData.totalTime),
 				calories: calories
-			});
+			};
+
+			this.endingScenarioManager.updateInfoBox(statsData);
+			this.endingScenarioManager.updatePassportStats(statsData);
 		}
 	}
 
@@ -456,7 +459,7 @@ export class TrackVisualization {
 		if (this.endMarker) {
 			this.map.removeLayer(this.endMarker);
 		}
-		this.endingScenarioManager.hideInfoBox();
+		this.endingScenarioManager.hideAllScenarios();
 		this.ui.clearProgress();
 
 		const userZoom = this.map.getZoom();
@@ -571,7 +574,7 @@ export class TrackVisualization {
 
 		this.ui.gpxFileName.textContent = 'No track loaded';
 		this.ui.deleteGpxBtn.classList.remove('visible');
-		this.endingScenarioManager.hideInfoBox();
+		this.endingScenarioManager.hideAllScenarios();
 
 		this.map.setView([49.997, 14.24], this.state.initialZoom);
 

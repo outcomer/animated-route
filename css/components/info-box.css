@@ -10,12 +10,23 @@
 	max-width: 90vw;
 	border-radius: 10px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-	transition: opacity 0.8s;
+	display: none;
 }
 
-.info-box.hidden {
-	opacity: 0;
-	pointer-events: none;
+.info-box.visible {
+	display: block;
+	animation: infoBoxAppear 0.3s ease-out forwards;
+}
+
+@keyframes infoBoxAppear {
+	0% {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 .info-box h2 {

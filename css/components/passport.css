@@ -1,0 +1,147 @@
+/* Passport ending scenario: green border frame and stats bar */
+
+.passport-frame {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	pointer-events: none;
+	z-index: 1200;
+	display: none;
+}
+
+.passport-frame.visible {
+	display: block;
+}
+
+.passport-frame-outer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	box-sizing: border-box;
+	z-index: 1;
+}
+
+.passport-frame-inner {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	box-sizing: border-box;
+	border-radius: 65px;
+	z-index: 2;
+}
+
+.passport-frame.visible .passport-frame-outer {
+	animation: passportFrameOuterAppear 0.3s ease-out forwards;
+}
+
+.passport-frame.visible .passport-frame-inner {
+	animation: passportFrameInnerAppear 0.3s ease-out forwards;
+}
+
+@keyframes passportFrameOuterAppear {
+	0% {
+		border: 0px solid #003e04;
+	}
+	100% {
+		border: 60px solid #003e04;
+	}
+}
+
+@keyframes passportFrameInnerAppear {
+	0% {
+		border: 0px solid #003e04;
+	}
+	100% {
+		border: 60px solid #003e04;
+	}
+}
+
+.passport-stats {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 18px 80px;
+	justify-content: center;
+	align-items: center;
+	z-index: 1300;
+	gap: 20px;
+	display: none;
+}
+
+.passport-stats.visible {
+	display: flex;
+	animation: passportStatsAppear 0.3s ease-out forwards;
+}
+
+@keyframes passportStatsAppear {
+	0% {
+		background: transparent;
+		opacity: 0;
+	}
+	50% {
+		background: transparent;
+		opacity: 0;
+	}
+	100% {
+		background: transparent;
+		opacity: 1;
+	}
+}
+
+.passport-stat {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: white;
+	font-size: 16px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.passport-stat .material-symbols-outlined {
+	font-size: 24px;
+	color: white;
+}
+
+@media (max-width: 1200px) {
+	.passport-stats {
+		padding: 12px 60px;
+		gap: 15px;
+	}
+
+	.passport-stat {
+		font-size: 14px;
+	}
+
+	.passport-stat .material-symbols-outlined {
+		font-size: 20px;
+	}
+}
+
+@media (max-width: 768px) {
+	.passport-frame {
+		border-width: 40px;
+	}
+
+	.passport-stats {
+		padding: 10px 50px;
+		gap: 10px;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.passport-stat {
+		font-size: 12px;
+	}
+
+	.passport-stat .material-symbols-outlined {
+		font-size: 18px;
+	}
+}

@@ -13,20 +13,30 @@ export class EndingScenarioManager {
 		this.map = map;
 		this.state = state;
 		this.infoBox = document.querySelector('.info-box');
+		this.passportFrame = document.querySelector('.passport-frame');
+		this.passportStats = document.querySelector('.passport-stats');
 	}
 
 	/**
 	 * Show the info box
 	 */
 	showInfoBox() {
-		this.infoBox.classList.remove('hidden');
+		this.infoBox.classList.add('visible');
 	}
 
 	/**
 	 * Hide the info box
 	 */
 	hideInfoBox() {
-		this.infoBox.classList.add('hidden');
+		this.infoBox.classList.remove('visible');
+	}
+
+	/**
+	 * Hide all scenario elements (use before animation starts)
+	 */
+	hideAllScenarios() {
+		this.hideInfoBox();
+		this.hidePassport();
 	}
 
 	/**
@@ -57,14 +67,17 @@ export class EndingScenarioManager {
 		const scenario = this.ui.getEndingScenario();
 
 		switch (scenario) {
-			case 'show_stats':
-				this.showStatistics(showControlsCallback);
+			case 'none':
+				this.showNone(showControlsCallback);
 				break;
-			case 'hide_all':
-				this.hideAll(showControlsCallback);
+			case 'info_box':
+				this.showInfoBoxScenario(showControlsCallback);
+				break;
+			case 'passport':
+				this.showPassport(showControlsCallback);
 				break;
 			default:
-				this.showStatistics(showControlsCallback);
+				this.showNone(showControlsCallback);
 		}
 	}
 
@@ -74,23 +87,31 @@ export class EndingScenarioManager {
 	applyCurrentScenario() {
 		const scenario = this.ui.getEndingScenario();
 
+		// Reset all scenarios first
+		this.hideInfoBox();
+		this.hidePassport();
+
 		switch (scenario) {
-			case 'show_stats':
+			case 'none':
+				// Everything is hidden
+				break;
+			case 'info_box':
 				this.showInfoBox();
 				break;
-			case 'hide_all':
-				this.hideInfoBox();
+			case 'passport':
+				this.showPassportFrame();
 				break;
 			default:
-				this.showInfoBox();
+				// Everything is hidden by default
+				break;
 		}
 	}
 
 	/**
-	 * Show statistics ending scenario
+	 * Info box ending scenario
 	 * @param {Function} showControlsCallback - Callback to show controls
 	 */
-	showStatistics(showControlsCallback) {
+	showInfoBoxScenario(showControlsCallback) {
 		// Show info box with statistics
 		this.showInfoBox();
 
@@ -116,10 +137,10 @@ export class EndingScenarioManager {
 	}
 
 	/**
-	 * Hide all ending scenario
+	 * None ending scenario - hide everything
 	 * @param {Function} showControlsCallback - Callback to show controls
 	 */
-	hideAll(showControlsCallback) {
+	showNone(showControlsCallback) {
 		// Hide info box
 		this.hideInfoBox();
 
@@ -133,6 +154,92 @@ export class EndingScenarioManager {
 				duration: 1.5,
 				maxZoom: currentZoom,
 				padding: [50, 50]
+			});
+		}
+
+		// Show controls after delay
+		setTimeout(() => {
+			if (showControlsCallback) {
+				showControlsCallback();
+			}
+		}, 2000);
+	}
+
+	/**
+	 * Show passport frame
+	 */
+	showPassportFrame() {
+		this.passportFrame.classList.add('visible');
+		this.passportStats.classList.add('visible');
+	}
+
+	/**
+	 * Hide passport frame and stats
+	 */
+	hidePassport() {
+		this.passportFrame.classList.remove('visible');
+		this.passportStats.classList.remove('visible');
+	}
+
+	/**
+	 * Update passport stats bar with track metrics
+	 * @param {Object} data - Track metrics data
+	 */
+	updatePassportStats(data) {
+		this.passportStats.innerHTML = `
+			<div class="passport-stat">
+				<span class="material-symbols-outlined" title="Distance">straighten</span>
+				<span>${data.distance.toFixed(2)} km</span>
+			</div>
+			<div class="passport-stat">
+				<span class="material-symbols-outlined" title="Elevation gain">trending_up</span>
+				<span>${Math.round(data.elevation.gain)} m</span>
+			</div>
+			<div class="passport-stat">
+				<span class="material-symbols-outlined" title="Elevation loss">trending_down</span>
+				<span>${Math.round(data.elevation.loss)} m</span>
+			</div>
+			<div class="passport-stat">
+				<span class="material-symbols-outlined" title="Average speed">speed</span>
+				<span>${data.movingSpeed} km/h</span>
+			</div>
+			<div class="passport-stat">
+				<span class="material-symbols-outlined" title="Maximum speed">flash_on</span>
+				<span>${data.maxSpeed} km/h</span>
+			</div>
+			<div class="passport-stat">
+				<span class="material-symbols-outlined" title="Time in motion">timer</span>
+				<span>${data.movingTime}</span>
+			</div>
+			<div class="passport-stat">
+				<span class="material-symbols-outlined" title="Total time">schedule</span>
+				<span>${data.totalTime}</span>
+			</div>
+			<div class="passport-stat">
+				<span class="material-symbols-outlined" title="Calories burned">whatshot</span>
+				<span>~${data.calories} kcal</span>
+			</div>
+		`;
+	}
+
+	/**
+	 * Show passport ending scenario
+	 * @param {Function} showControlsCallback - Callback to show controls
+	 */
+	showPassport(showControlsCallback) {
+		// Show passport frame and stats
+		this.showPassportFrame();
+
+		// Fit map to route bounds
+		if (this.state.cameraFollow) {
+			const allCoords = this.state.fullRoute.map(p => [p.lat, p.lng]);
+			const bounds = L.latLngBounds(allCoords);
+			const currentZoom = this.map.getZoom();
+
+			this.map.flyToBounds(bounds, {
+				duration: 1.5,
+				maxZoom: currentZoom,
+				padding: [80, 80]
 			});
 		}
 
