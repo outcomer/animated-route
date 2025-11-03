@@ -46,19 +46,19 @@
 
 @keyframes passportFrameOuterAppear {
 	0% {
-		border: 0px solid #003e04;
+		border: 0px solid #000000;
 	}
 	100% {
-		border: 60px solid #003e04;
+		border: 60px solid #000000;
 	}
 }
 
 @keyframes passportFrameInnerAppear {
 	0% {
-		border: 0px solid #003e04;
+		border: 0px solid #000000;
 	}
 	100% {
-		border: 60px solid #003e04;
+		border: 60px solid #000000;
 	}
 }
 
