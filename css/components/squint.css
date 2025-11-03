@@ -1,0 +1,132 @@
+/* Squint ending scenario: horizontal lines only (top and bottom) */
+
+.squint-frame {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	pointer-events: none;
+	z-index: 1200;
+	box-sizing: border-box;
+	display: none;
+}
+
+.squint-frame.visible {
+	display: block;
+	animation: squintFrameAppear 0.3s ease-out forwards;
+}
+
+@keyframes squintFrameAppear {
+	0% {
+		border-top: 0px solid #003e04;
+		border-bottom: 0px solid #003e04;
+		border-left: 0px solid transparent;
+		border-right: 0px solid transparent;
+	}
+	100% {
+		border-top: 60px solid #003e04;
+		border-bottom: 60px solid #003e04;
+		border-left: 0px solid transparent;
+		border-right: 0px solid transparent;
+	}
+}
+
+.squint-stats {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 18px 80px;
+	justify-content: center;
+	align-items: center;
+	z-index: 1300;
+	gap: 20px;
+	display: none;
+}
+
+.squint-stats.visible {
+	display: flex;
+	animation: squintStatsAppear 0.3s ease-out forwards;
+}
+
+@keyframes squintStatsAppear {
+	0% {
+		background: transparent;
+		opacity: 0;
+	}
+	50% {
+		background: transparent;
+		opacity: 0;
+	}
+	100% {
+		background: transparent;
+		opacity: 1;
+	}
+}
+
+.squint-stat {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: white;
+	font-size: 16px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.squint-stat .material-symbols-outlined {
+	font-size: 24px;
+	color: white;
+}
+
+@media (max-width: 1200px) {
+	.squint-stats {
+		padding: 12px 60px;
+		gap: 15px;
+	}
+
+	.squint-stat {
+		font-size: 14px;
+	}
+
+	.squint-stat .material-symbols-outlined {
+		font-size: 20px;
+	}
+}
+
+@media (max-width: 768px) {
+	.squint-frame.visible {
+		animation: squintFrameAppearMobile 0.3s ease-out forwards;
+	}
+
+	@keyframes squintFrameAppearMobile {
+		0% {
+			border-top: 0px solid #003e04;
+			border-bottom: 0px solid #003e04;
+			border-left: 0px solid transparent;
+			border-right: 0px solid transparent;
+		}
+		100% {
+			border-top: 40px solid #003e04;
+			border-bottom: 40px solid #003e04;
+			border-left: 0px solid transparent;
+			border-right: 0px solid transparent;
+		}
+	}
+
+	.squint-stats {
+		padding: 10px 50px;
+		gap: 10px;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.squint-stat {
+		font-size: 12px;
+	}
+
+	.squint-stat .material-symbols-outlined {
+		font-size: 18px;
+	}
+}

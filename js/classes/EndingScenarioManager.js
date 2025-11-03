@@ -15,6 +15,8 @@ export class EndingScenarioManager {
 		this.infoBox = document.querySelector('.info-box');
 		this.passportFrame = document.querySelector('.passport-frame');
 		this.passportStats = document.querySelector('.passport-stats');
+		this.squintFrame = document.querySelector('.squint-frame');
+		this.squintStats = document.querySelector('.squint-stats');
 	}
 
 	/**
@@ -37,6 +39,7 @@ export class EndingScenarioManager {
 	hideAllScenarios() {
 		this.hideInfoBox();
 		this.hidePassport();
+		this.hideSquint();
 	}
 
 	/**
@@ -76,6 +79,9 @@ export class EndingScenarioManager {
 			case 'passport':
 				this.showPassport(showControlsCallback);
 				break;
+			case 'squint':
+				this.showSquint(showControlsCallback);
+				break;
 			default:
 				this.showNone(showControlsCallback);
 		}
@@ -90,6 +96,7 @@ export class EndingScenarioManager {
 		// Reset all scenarios first
 		this.hideInfoBox();
 		this.hidePassport();
+		this.hideSquint();
 
 		switch (scenario) {
 			case 'none':
@@ -100,6 +107,9 @@ export class EndingScenarioManager {
 				break;
 			case 'passport':
 				this.showPassportFrame();
+				break;
+			case 'squint':
+				this.showSquintFrame();
 				break;
 			default:
 				// Everything is hidden by default
@@ -186,7 +196,7 @@ export class EndingScenarioManager {
 	 * @param {Object} data - Track metrics data
 	 */
 	updatePassportStats(data) {
-		this.passportStats.innerHTML = `
+		const statsHTML = `
 			<div class="passport-stat">
 				<span class="material-symbols-outlined" title="Distance">straighten</span>
 				<span>${data.distance.toFixed(2)} km</span>
@@ -220,6 +230,8 @@ export class EndingScenarioManager {
 				<span>~${data.calories} kcal</span>
 			</div>
 		`;
+		this.passportStats.innerHTML = statsHTML;
+		this.squintStats.innerHTML = statsHTML.replace(/passport-stat/g, 'squint-stat');
 	}
 
 	/**
@@ -229,6 +241,51 @@ export class EndingScenarioManager {
 	showPassport(showControlsCallback) {
 		// Show passport frame and stats
 		this.showPassportFrame();
+
+		// Fit map to route bounds
+		if (this.state.cameraFollow) {
+			const allCoords = this.state.fullRoute.map(p => [p.lat, p.lng]);
+			const bounds = L.latLngBounds(allCoords);
+			const currentZoom = this.map.getZoom();
+
+			this.map.flyToBounds(bounds, {
+				duration: 1.5,
+				maxZoom: currentZoom,
+				padding: [80, 80]
+			});
+		}
+
+		// Show controls after delay
+		setTimeout(() => {
+			if (showControlsCallback) {
+				showControlsCallback();
+			}
+		}, 2000);
+	}
+
+	/**
+	 * Show squint frame
+	 */
+	showSquintFrame() {
+		this.squintFrame.classList.add('visible');
+		this.squintStats.classList.add('visible');
+	}
+
+	/**
+	 * Hide squint frame and stats
+	 */
+	hideSquint() {
+		this.squintFrame.classList.remove('visible');
+		this.squintStats.classList.remove('visible');
+	}
+
+	/**
+	 * Show squint ending scenario
+	 * @param {Function} showControlsCallback - Callback to show controls
+	 */
+	showSquint(showControlsCallback) {
+		// Show squint frame and stats
+		this.showSquintFrame();
 
 		// Fit map to route bounds
 		if (this.state.cameraFollow) {
