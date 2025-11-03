@@ -20,6 +20,15 @@ export class EndingScenarioManager {
 	}
 
 	/**
+	 * Hide all scenario elements (use before animation starts)
+	 */
+	hideAllScenarios() {
+		this.hideInfoBox();
+		this.hidePassport();
+		this.hideSquint();
+	}
+
+	/**
 	 * Show the info box
 	 */
 	showInfoBox() {
@@ -31,15 +40,6 @@ export class EndingScenarioManager {
 	 */
 	hideInfoBox() {
 		this.infoBox.classList.remove('visible');
-	}
-
-	/**
-	 * Hide all scenario elements (use before animation starts)
-	 */
-	hideAllScenarios() {
-		this.hideInfoBox();
-		this.hidePassport();
-		this.hideSquint();
 	}
 
 	/**
@@ -176,22 +176,6 @@ export class EndingScenarioManager {
 	}
 
 	/**
-	 * Show passport frame
-	 */
-	showPassportFrame() {
-		this.passportFrame.classList.add('visible');
-		this.passportStats.classList.add('visible');
-	}
-
-	/**
-	 * Hide passport frame and stats
-	 */
-	hidePassport() {
-		this.passportFrame.classList.remove('visible');
-		this.passportStats.classList.remove('visible');
-	}
-
-	/**
 	 * Update passport stats bar with track metrics
 	 * @param {Object} data - Track metrics data
 	 */
@@ -235,12 +219,29 @@ export class EndingScenarioManager {
 	}
 
 	/**
+	 * Show passport frame
+	 */
+	showPassportFrame() {
+		this.passportFrame.classList.add('visible');
+		this.passportStats.classList.add('visible');
+	}
+
+	/**
 	 * Show passport ending scenario
 	 * @param {Function} showControlsCallback - Callback to show controls
 	 */
 	showPassport(showControlsCallback) {
-		// Show passport frame and stats
-		this.showPassportFrame();
+		const showFrame = () => {
+			// Show passport frame and stats
+			this.showPassportFrame();
+
+			// Show controls after delay
+			setTimeout(() => {
+				if (showControlsCallback) {
+					showControlsCallback();
+				}
+			}, 2000);
+		};
 
 		// Fit map to route bounds
 		if (this.state.cameraFollow) {
@@ -253,14 +254,19 @@ export class EndingScenarioManager {
 				maxZoom: currentZoom,
 				padding: [80, 80]
 			});
-		}
 
-		// Show controls after delay
-		setTimeout(() => {
-			if (showControlsCallback) {
-				showControlsCallback();
-			}
-		}, 2000);
+			this.map.once('moveend', showFrame);
+		} else {
+			showFrame();
+		}
+	}
+
+	/**
+	 * Hide passport frame and stats
+	 */
+	hidePassport() {
+		this.passportFrame.classList.remove('visible');
+		this.passportStats.classList.remove('visible');
 	}
 
 	/**
@@ -272,20 +278,21 @@ export class EndingScenarioManager {
 	}
 
 	/**
-	 * Hide squint frame and stats
-	 */
-	hideSquint() {
-		this.squintFrame.classList.remove('visible');
-		this.squintStats.classList.remove('visible');
-	}
-
-	/**
 	 * Show squint ending scenario
 	 * @param {Function} showControlsCallback - Callback to show controls
 	 */
 	showSquint(showControlsCallback) {
-		// Show squint frame and stats
-		this.showSquintFrame();
+		const showFrame = () => {
+			// Show squint frame and stats
+			this.showSquintFrame();
+
+			// Show controls after delay
+			setTimeout(() => {
+				if (showControlsCallback) {
+					showControlsCallback();
+				}
+			}, 2000);
+		};
 
 		// Fit map to route bounds
 		if (this.state.cameraFollow) {
@@ -298,14 +305,18 @@ export class EndingScenarioManager {
 				maxZoom: currentZoom,
 				padding: [80, 80]
 			});
-		}
 
-		// Show controls after delay
-		setTimeout(() => {
-			if (showControlsCallback) {
-				showControlsCallback();
-			}
-		}, 2000);
+			this.map.once('moveend', showFrame);
+		} else {
+			showFrame();
+		}
 	}
 
+	/**
+	 * Hide squint frame and stats
+	 */
+	hideSquint() {
+		this.squintFrame.classList.remove('visible');
+		this.squintStats.classList.remove('visible');
+	}
 }
