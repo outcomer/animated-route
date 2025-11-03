@@ -109,7 +109,7 @@ export class TrackVisualization {
 					useDensified: true,
 					cameraFollow: true,
 					mapStyle: 'light',
-					endingScenario: 'none',
+					endingScenario: 'squint',
 					animationDuration: 60,
 					routeZoom: this.state.initialZoom
 				};
@@ -185,7 +185,7 @@ export class TrackVisualization {
 			this.ui.mapStyleSelect.value = appData.mapStyle;
 			this.changeMapStyle(appData.mapStyle);
 
-			const endingScenario = appData.endingScenario || 'none';
+			const endingScenario = appData.endingScenario || 'squint';
 			this.ui.initEndingScenario(endingScenario);
 
 			this.state.animationDuration = appData.animationDuration;
