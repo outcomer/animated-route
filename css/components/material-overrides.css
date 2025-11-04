@@ -197,3 +197,8 @@ body {
 	font-weight: 600;
 	color: #4285f4;
 }
+
+/* Leaflet map zoom controls */
+.leaflet-top.leaflet-left {
+	z-index: 1500 !important;
+}
