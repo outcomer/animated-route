@@ -140,13 +140,7 @@ export class RouteAnimator {
 
 		// Execute ending scenario
 		const showControlsCallback = () => this.ui.showControls();
-
-		if (this.onCompleteCallback) {
-			this.onCompleteCallback(showControlsCallback);
-			this.onCompleteCallback = null;
-		} else {
-			this.trackViz.endingScenarioManager.execute(showControlsCallback);
-		}
+		this.trackViz.endingScenarioManager.execute(showControlsCallback);
 	}
 
 	/**

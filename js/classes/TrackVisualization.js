@@ -727,21 +727,14 @@ export class TrackVisualization {
 
 			mediaRecorder.start(1000);
 
-			this.animator.onCompleteCallback = async (showControlsCallback) => {
-				await new Promise(resolve => setTimeout(resolve, 2000));
-
+			// Listen for ending scenario completion to stop recording
+			const stopRecording = () => {
 				if (mediaRecorder && mediaRecorder.state !== 'inactive') {
 					mediaRecorder.stop();
-
-					await new Promise(resolve => {
-						mediaRecorder.addEventListener('stop', resolve, { once: true });
-					});
-
-					if (showControlsCallback) {
-						showControlsCallback();
-					}
 				}
 			};
+
+			document.addEventListener('endingScenarioComplete', stopRecording, { once: true });
 
 			this.startAnimation();
 

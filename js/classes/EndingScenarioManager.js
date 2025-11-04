@@ -138,8 +138,10 @@ export class EndingScenarioManager {
 			});
 		}
 
-		// Show controls after delay
+		// Show controls after delay and dispatch event
 		setTimeout(() => {
+			document.dispatchEvent(new CustomEvent('endingScenarioComplete'));
+
 			if (showControlsCallback) {
 				showControlsCallback();
 			}
@@ -167,8 +169,10 @@ export class EndingScenarioManager {
 			});
 		}
 
-		// Show controls after delay
+		// Show controls after delay and dispatch event
 		setTimeout(() => {
+			document.dispatchEvent(new CustomEvent('endingScenarioComplete'));
+
 			if (showControlsCallback) {
 				showControlsCallback();
 			}
@@ -235,8 +239,10 @@ export class EndingScenarioManager {
 			// Show passport frame and stats
 			this._showPassportUI();
 
-			// Show controls after delay
+			// Show controls after delay and dispatch event
 			setTimeout(() => {
+				document.dispatchEvent(new CustomEvent('endingScenarioComplete'));
+
 				if (showControlsCallback) {
 					showControlsCallback();
 				}
@@ -286,8 +292,10 @@ export class EndingScenarioManager {
 			// Show squint frame and stats
 			this._showSquintUI();
 
-			// Show controls after delay
+			// Show controls after delay and dispatch event
 			setTimeout(() => {
+				document.dispatchEvent(new CustomEvent('endingScenarioComplete'));
+
 				if (showControlsCallback) {
 					showControlsCallback();
 				}
