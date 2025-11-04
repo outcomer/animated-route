@@ -4,95 +4,120 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Маршрут Zličín → Mořina</title>
+	<title>GPX track animator</title>
 	<link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+	<!-- Material Design 3 -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+	<script type="importmap">
+	{
+		"imports": {
+			"@material/web/": "/node_modules/@material/web/",
+			"lit": "/node_modules/lit/index.js",
+			"lit/": "/node_modules/lit/",
+			"lit-element": "/node_modules/lit-element/lit-element.js",
+			"lit-element/": "/node_modules/lit-element/",
+			"lit-html": "/node_modules/lit-html/lit-html.js",
+			"lit-html/": "/node_modules/lit-html/",
+			"@lit/reactive-element": "/node_modules/@lit/reactive-element/reactive-element.js",
+			"@lit/reactive-element/": "/node_modules/@lit/reactive-element/",
+			"@lit-labs/observers/": "/node_modules/@lit-labs/observers/",
+			"tslib": "/node_modules/tslib/tslib.es6.mjs"
+		}
+	}
+	</script>
+	<script type="module" src="/node_modules/@material/web/all.js"></script>
+
+	<!-- Leaflet -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+
+	<!-- Custom styles -->
 	<link rel="stylesheet" href="css/main.css" />
 </head>
 
 <body>
 	<div id="map"></div>
-	<button id="toggleControlsBtn" class="hamburger-btn" title="Toggle Controls">
-		<span class="material-symbols-outlined">menu</span>
-	</button>
+	<md-icon-button id="toggleControlsBtn" class="hamburger-btn" title="Toggle Controls">
+		<md-icon>menu</md-icon>
+	</md-icon-button>
 	<div class="controls">
 		<div class="sidebar-header">
 			<h2>Controls</h2>
 		</div>
 		<div class="controls-content">
 		<div class="button-row">
-			<button id="startBtn">
-				<span class="material-symbols-outlined">play_circle</span> Animate
-			</button>
-			<button id="recordBtn">
-				<span class="material-symbols-outlined">radio_button_checked</span> Record
-			</button>
+			<md-filled-button id="startBtn">
+				<md-icon slot="icon">play_circle</md-icon>
+				Animate
+			</md-filled-button>
+			<md-filled-button id="recordBtn">
+				<md-icon slot="icon">radio_button_checked</md-icon>
+				Record
+			</md-filled-button>
 		</div>
 		<div class="speed-control">
-			<label>
+			<label for="durationSlider">
 				Animation duration: <span id="durationLabel"></span>s
 			</label>
-			<input type="range" id="durationSlider" min="5" max="300" step="5" value="60">
+			<md-slider id="durationSlider" min="5" max="60" step="5" value="15" labeled></md-slider>
 		</div>
 		<div class="speed-control">
-			<label>
+			<label for="zoomSlider">
 				Zoom: <span id="zoomLabel"></span>
 			</label>
-			<input type="range" id="zoomSlider" min="0" max="18" step="1" value="16">
+			<md-slider id="zoomSlider" min="0" max="18" step="1" value="16" labeled></md-slider>
 		</div>
 		<div class="weight-control">
-			<label for="weightInput">My Weight, kg:</label>
-			<input type="number" id="weightInput" min="40" max="150" step="1" value="">
+			<md-outlined-text-field id="weightInput" name="weight" type="number" min="40" max="150" step="1" label="My Weight" suffix-text="kg" aria-label="My Weight in kilograms"></md-outlined-text-field>
 		</div>
 		<div class="densified-control">
 			<label>
-				<input type="checkbox" id="densifiedToggle" checked>
+				<md-checkbox id="densifiedToggle" checked touch-target="wrapper"></md-checkbox>
 				Use densified track (5m)
 			</label>
 		</div>
 		<div class="camera-follow-control">
 			<label>
-				<input type="checkbox" id="cameraFollowToggle" checked>
+				<md-checkbox id="cameraFollowToggle" checked touch-target="wrapper"></md-checkbox>
 				Follow route during animation
 			</label>
 		</div>
 		<div class="map-style-control">
-			<label for="mapStyleSelect">Map style:</label>
-			<select id="mapStyleSelect">
-				<option value="light">CartoDB Light</option>
-				<option value="dark">CartoDB Dark</option>
-				<option value="voyager">CartoDB Voyager</option>
-				<option value="osm">OSM Standard</option>
-				<option value="osm_hot">OSM HOT</option>
-				<option value="cyclosm">CyclOSM</option>
-				<option value="satellite">Satellite</option>
-				<option value="street">World Street</option>
-				<option value="topo">World Topo</option>
-			</select>
+			<md-outlined-select id="mapStyleSelect" label="Map style">
+				<md-select-option value="light" selected><div slot="headline">CartoDB Light</div></md-select-option>
+				<md-select-option value="dark"><div slot="headline">CartoDB Dark</div></md-select-option>
+				<md-select-option value="voyager"><div slot="headline">CartoDB Voyager</div></md-select-option>
+				<md-select-option value="osm"><div slot="headline">OSM Standard</div></md-select-option>
+				<md-select-option value="osm_hot"><div slot="headline">OSM HOT</div></md-select-option>
+				<md-select-option value="cyclosm"><div slot="headline">CyclOSM</div></md-select-option>
+				<md-select-option value="satellite"><div slot="headline">Satellite</div></md-select-option>
+				<md-select-option value="street"><div slot="headline">World Street</div></md-select-option>
+				<md-select-option value="topo"><div slot="headline">World Topo</div></md-select-option>
+			</md-outlined-select>
 		</div>
 		<div class="ending-scenario-control">
-			<label for="endingScenarioSelect">Ending scenario:</label>
-			<select id="endingScenarioSelect">
-				<option value="none">None</option>
-				<option value="info_box">Info Box</option>
-				<option value="passport">Passport</option>
-				<option value="squint" selected>Squint</option>
-			</select>
+			<md-outlined-select id="endingScenarioSelect" label="Ending scenario">
+				<md-select-option value="none"><div slot="headline">None</div></md-select-option>
+				<md-select-option value="info_box"><div slot="headline">Info Box</div></md-select-option>
+				<md-select-option value="passport"><div slot="headline">Passport</div></md-select-option>
+				<md-select-option value="squint" selected><div slot="headline">Squint</div></md-select-option>
+			</md-outlined-select>
 		</div>
 		<div class="animation-counter">
-			<label>Total animations played:</label>
+			<div class="counter-label">Total animations played:</div>
 			<span id="animationCount">...</span>
 		</div>
 		<div class="gpx-upload">
 			<div class="gpx-buttons">
-				<label for="gpxFile" class="upload-btn">
-					<span class="material-symbols-outlined">folder_open</span> Load GPX
-				</label>
+				<md-filled-button id="uploadGpxBtn">
+					<md-icon slot="icon">folder_open</md-icon>
+					Load GPX
+				</md-filled-button>
 				<input type="file" id="gpxFile" accept=".gpx" style="display: none;">
-				<button id="deleteGpxBtn" class="delete-btn" title="Delete track">
-					<span class="material-symbols-outlined">close</span>
-				</button>
+				<md-icon-button id="deleteGpxBtn" class="delete-btn" title="Delete track">
+					<md-icon>close</md-icon>
+				</md-icon-button>
 			</div>
 			<span id="gpxFileName"></span>
 		</div>

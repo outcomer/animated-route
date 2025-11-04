@@ -403,12 +403,32 @@ export class TrackVisualization {
 		});
 
 		this.ui.durationSlider.addEventListener('input', (e) => {
-			this.state.animationDuration = parseInt(e.target.value);
-			this.ui.updateDurationLabel(this.state.animationDuration);
-			this.saveAppData('animationDuration', this.state.animationDuration);
+			const value = parseInt(e.target.value);
+			this.state.animationDuration = value;
+			this.ui.updateDurationLabel(value);
+			this.saveAppData('animationDuration', value);
+		});
+
+		this.ui.durationSlider.addEventListener('change', (e) => {
+			const value = parseInt(e.target.value);
+			this.state.animationDuration = value;
+			this.ui.updateDurationLabel(value);
+			this.saveAppData('animationDuration', value);
 		});
 
 		this.ui.zoomSlider.addEventListener('input', (e) => {
+			const newZoom = parseInt(e.target.value);
+			this.state.routeZoom = newZoom;
+			this.ui.updateZoomLabel(newZoom);
+			this.saveAppData('routeZoom', newZoom);
+
+			// Only set zoom if it's different to avoid infinite loop
+			if (this.map.getZoom() !== newZoom) {
+				this.map.setZoom(newZoom);
+			}
+		});
+
+		this.ui.zoomSlider.addEventListener('change', (e) => {
 			const newZoom = parseInt(e.target.value);
 			this.state.routeZoom = newZoom;
 			this.ui.updateZoomLabel(newZoom);
@@ -443,6 +463,14 @@ export class TrackVisualization {
 			});
 		} else {
 			console.error('Record button not found!');
+		}
+
+		// Handle upload button click - trigger file input
+		const uploadGpxBtn = document.getElementById('uploadGpxBtn');
+		if (uploadGpxBtn) {
+			uploadGpxBtn.addEventListener('click', () => {
+				this.ui.gpxFileInput.click();
+			});
 		}
 
 		this.ui.gpxFileInput.addEventListener('change', (e) => {

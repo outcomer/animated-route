@@ -1,3 +1,24 @@
 {
-  "type": "module"
+  "type": "module",
+  "name": "me-animated-route",
+  "version": "1.0.0",
+  "description": "Interactive GPX track visualization with smooth animation on a map using Leaflet.js. Features built-in video recording, automatic data persistence, and cinematic route playback.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/outcomer/animated-route.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/outcomer/animated-route/issues"
+  },
+  "homepage": "https://github.com/outcomer/animated-route#readme",
+  "dependencies": {
+    "@material/web": "^2.2.0"
+  }
 }

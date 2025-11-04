@@ -1,0 +1,199 @@
+/* Material Design overrides and custom theming */
+
+:root {
+	/* Material Design 3 Color Tokens */
+	--md-sys-color-primary: #4285f4;
+	--md-sys-color-on-primary: #ffffff;
+	--md-sys-color-primary-container: #d3e3fd;
+	--md-sys-color-on-primary-container: #001c38;
+	--md-sys-color-secondary: #575e71;
+	--md-sys-color-on-secondary: #ffffff;
+	--md-sys-color-error: #ea4335;
+	--md-sys-color-on-error: #ffffff;
+	--md-sys-color-surface: #ffffff;
+	--md-sys-color-on-surface: #1a1c1e;
+	--md-filled-button-container-color: #4285f4;
+	--md-filled-button-label-text-color: #ffffff;
+}
+
+body {
+	font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+}
+
+/* Button row layout */
+.button-row {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 10px;
+}
+
+.button-row md-filled-button {
+	flex: 1;
+	--md-filled-button-container-height: 40px;
+}
+
+/* Slider controls */
+.speed-control {
+	margin-top: 15px;
+	margin-bottom: 15px;
+}
+
+.speed-control label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 14px;
+	color: #5f6368;
+	font-weight: 500;
+}
+
+.speed-control md-slider {
+	width: 100%;
+	--md-slider-active-track-color: #4285f4;
+	--md-slider-handle-color: #4285f4;
+	--md-slider-inactive-track-color: #dadce0;
+}
+
+/* Weight control */
+.weight-control {
+	margin-top: 15px;
+	margin-bottom: 15px;
+}
+
+.weight-control md-outlined-text-field {
+	width: 100%;
+}
+
+/* Checkbox controls */
+.densified-control,
+.camera-follow-control {
+	margin-top: 15px;
+	margin-bottom: 15px;
+}
+
+.densified-control label,
+.camera-follow-control label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	user-select: none;
+	font-size: 14px;
+	color: #202124;
+}
+
+.densified-control md-checkbox,
+.camera-follow-control md-checkbox {
+	--md-checkbox-selected-container-color: #4285f4;
+	--md-checkbox-selected-icon-color: #ffffff;
+}
+
+/* Select controls */
+.map-style-control,
+.ending-scenario-control {
+	margin-top: 15px;
+	margin-bottom: 15px;
+}
+
+.map-style-control md-outlined-select,
+.ending-scenario-control md-outlined-select {
+	width: 100%;
+	--md-outlined-select-text-field-container-color: transparent;
+}
+
+/* GPX upload section */
+.gpx-upload {
+	margin-top: 15px;
+	padding-top: 15px;
+	border-top: 1px solid #e0e0e0;
+}
+
+.gpx-buttons {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.gpx-buttons md-filled-button {
+	flex: 1;
+	--md-filled-button-container-height: 40px;
+}
+
+.gpx-buttons md-icon-button {
+	--md-icon-button-icon-size: 20px;
+	--md-icon-button-state-layer-height: 40px;
+	--md-icon-button-state-layer-width: 40px;
+	--md-icon-button-icon-color: #ffffff;
+	background: #ea4335;
+	border-radius: 50%;
+	display: none;
+}
+
+.gpx-buttons md-icon-button.visible {
+	display: flex;
+}
+
+.gpx-buttons md-icon-button:hover {
+	background: #c5381e;
+}
+
+#gpxFileName {
+	display: block;
+	margin-top: 8px;
+	font-size: 12px;
+	color: #5f6368;
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Hamburger menu button */
+.hamburger-btn {
+	position: fixed;
+	top: 10px;
+	right: 10px;
+	z-index: 2000;
+	--md-icon-button-icon-size: 20px;
+	--md-icon-button-state-layer-height: 32px;
+	--md-icon-button-state-layer-width: 32px;
+	--md-icon-button-icon-color: #202124;
+	--md-icon-button-hover-icon-color: #202124;
+	--md-icon-button-focus-icon-color: #202124;
+	--md-icon-button-pressed-icon-color: #202124;
+	--md-icon-button-selected-icon-color: #202124;
+	background: #ffffff;
+	border-radius: 50%;
+	width: 32px;
+	height: 32px;
+}
+
+.hamburger-btn.hidden {
+	display: none;
+}
+
+/* Animation counter */
+.animation-counter {
+	margin-top: 15px;
+	padding: 12px;
+	background: #f8f9fa;
+	border-radius: 8px;
+	text-align: center;
+}
+
+.animation-counter .counter-label {
+	display: block;
+	margin-bottom: 6px;
+	color: #5f6368;
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.animation-counter #animationCount {
+	display: block;
+	font-size: 28px;
+	font-weight: 600;
+	color: #4285f4;
+}

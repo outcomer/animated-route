@@ -2,7 +2,7 @@
 
 @import url('./base.css');
 @import url('./layout.css');
-@import url('./components/buttons.css');
+@import url('./components/material-overrides.css');
 @import url('./components/sidebar.css');
 @import url('./components/info-box.css');
 @import url('./components/progress.css');
