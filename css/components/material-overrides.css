@@ -200,5 +200,5 @@ body {
 
 /* Leaflet map zoom controls */
 .leaflet-top.leaflet-left {
-	z-index: 1500 !important;
+	top: 75px !important;
 }
