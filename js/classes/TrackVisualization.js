@@ -72,15 +72,13 @@ export class TrackVisualization {
 	}
 
 	/**
-	 * Check if screen recording is supported and disable button if not
+	 * Check if screen recording is supported
 	 */
 	checkRecordingSupport() {
-		const isSupported = navigator.mediaDevices &&
-							typeof navigator.mediaDevices.getDisplayMedia === 'function';
+		this.isRecordingSupported = navigator.mediaDevices &&
+									typeof navigator.mediaDevices.getDisplayMedia === 'function';
 
-		if (!isSupported && this.ui.recordBtn) {
-			this.ui.recordBtn.disabled = true;
-			this.ui.recordBtn.title = 'Screen recording is not supported on mobile devices';
+		if (!this.isRecordingSupported) {
 			console.log('Screen recording not supported on this device');
 		}
 	}
@@ -432,6 +430,10 @@ export class TrackVisualization {
 
 		if (this.ui.recordBtn) {
 			this.ui.recordBtn.addEventListener('click', () => {
+				if (!this.isRecordingSupported) {
+					alert('Screen recording is not supported on this device/browser. Please use a desktop browser with screen capture support.');
+					return;
+				}
 				if (!this.state.fullRoute || this.state.fullRoute.length === 0) {
 					alert('Please load a GPX file first');
 					return;
