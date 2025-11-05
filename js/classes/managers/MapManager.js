@@ -46,18 +46,20 @@ export class MapManager {
 			updateWhenZooming: false
 		}).addTo(this.map);
 
-		this.startIcon = L.icon({
-			iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-			iconSize: [25, 41],
-			iconAnchor: [12, 41],
-			popupAnchor: [1, -34]
+		this.startIcon = L.divIcon({
+			html: '<span class="material-symbols-outlined marker-filled" style="font-size: 40px; color: #00b607;">location_on</span>',
+			className: 'custom-marker-icon',
+			iconSize: [40, 40],
+			iconAnchor: [20, 35],
+			popupAnchor: [0, -35]
 		});
 
-		this.endIcon = L.icon({
-			iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-			iconSize: [25, 41],
-			iconAnchor: [12, 41],
-			popupAnchor: [1, -34]
+		this.endIcon = L.divIcon({
+			html: '<span class="material-symbols-outlined marker-filled" style="font-size: 40px; color: #ff0000;">location_on</span>',
+			className: 'custom-marker-icon',
+			iconSize: [40, 40],
+			iconAnchor: [20, 35],
+			popupAnchor: [0, -35]
 		});
 
 		return this.map;
