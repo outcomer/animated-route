@@ -6,7 +6,6 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	pointer-events: none;
 	z-index: 1200;
 	box-sizing: border-box;
 	display: none;
@@ -19,16 +18,14 @@
 
 @keyframes squintFrameAppear {
 	0% {
-		border-top: 0px solid #000000;
-		border-bottom: 0px solid #000000;
-		border-left: 0px solid transparent;
-		border-right: 0px solid transparent;
+		border-width: 0px;
+		border-style: solid;
+		border-color: transparent;
 	}
 	100% {
-		border-top: 60px solid #000000;
-		border-bottom: 60px solid #000000;
-		border-left: 0px solid transparent;
-		border-right: 0px solid transparent;
+		border-style: solid;
+		border-color: #000000;
+		border-width: 60px 0px;
 	}
 }
 

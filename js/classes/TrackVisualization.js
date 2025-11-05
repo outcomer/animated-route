@@ -90,7 +90,8 @@ export class TrackVisualization {
 		this.map = L.map('map', {
 			zoomAnimation: true,
 			fadeAnimation: true,
-			markerZoomAnimation: true
+			markerZoomAnimation: true,
+			zoomControl: false
 		}).setView([49.997, 14.24], this.state.initialZoom);
 
 		this.tileLayer = L.tileLayer(MAP_STYLES['light'], {
@@ -249,7 +250,7 @@ export class TrackVisualization {
 	 * @param {string} gpxText - GPX file content as text
 	 * @param {boolean} shouldFitBounds - Whether to fit map bounds to track
 	 */
-	parseAndDisplayGPX(gpxText, shouldFitBounds = true) {
+	parseAndDisplayGPX(gpxText, shouldFitBounds = false) {
 		const parser = new DOMParser();
 		const gpxDoc = parser.parseFromString(gpxText, 'text/xml');
 		const trkpts = gpxDoc.querySelectorAll('trkpt');
@@ -610,7 +611,7 @@ export class TrackVisualization {
 			const useDensified = this.loadAppData('useDensified') !== false;
 			const gpxToDisplay = useDensified && gpxDensified ? gpxDensified : gpxText;
 
-			this.parseAndDisplayGPX(gpxToDisplay);
+			this.parseAndDisplayGPX(gpxToDisplay, true);
 			this.ui.gpxFileName.textContent = `📄 ${file.name}`;
 			this.ui.deleteGpxBtn.classList.add('visible');
 

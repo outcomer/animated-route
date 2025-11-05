@@ -200,5 +200,6 @@ body {
 
 /* Leaflet map zoom controls */
 .leaflet-top.leaflet-left {
-	top: 75px !important;
+	top: calc(60px + 10px) !important;
+	left: calc(20px + 0px) !important;
 }

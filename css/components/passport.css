@@ -6,7 +6,6 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	pointer-events: none;
 	z-index: 1200;
 	display: none;
 }
@@ -52,12 +51,9 @@
 		border-color: #000000;
 	}
 	100% {
-		border-top-width: 60px;
-		border-bottom-width: 60px;
-		border-left-width: 20px;
-		border-right-width: 20px;
 		border-style: solid;
 		border-color: #000000;
+		border-width: 60px 20px;
 	}
 }
 
