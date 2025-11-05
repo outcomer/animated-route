@@ -9,6 +9,7 @@
 	z-index: 1200;
 	box-sizing: border-box;
 	display: none;
+	pointer-events: none;
 }
 
 .squint-frame.visible {

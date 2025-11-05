@@ -8,6 +8,7 @@
 	bottom: 0;
 	z-index: 1200;
 	display: none;
+	pointer-events: none;
 }
 
 .passport-frame.visible {
