@@ -131,10 +131,18 @@ export class EndingScenarioManager {
 			const bounds = L.latLngBounds(allCoords);
 			const currentZoom = this.map.getZoom();
 
+			// Force viewreset during fly animation to ensure polylines are redrawn
+			const onMove = () => this.map.fire('viewreset');
+			this.map.on('move', onMove);
+
 			this.map.flyToBounds(bounds, {
 				duration: 1.5,
 				maxZoom: currentZoom,
 				padding: [50, 50]
+			});
+
+			this.map.once('moveend', () => {
+				this.map.off('move', onMove);
 			});
 		}
 
@@ -162,10 +170,18 @@ export class EndingScenarioManager {
 			const bounds = L.latLngBounds(allCoords);
 			const currentZoom = this.map.getZoom();
 
+			// Force viewreset during fly animation to ensure polylines are redrawn
+			const onMove = () => this.map.fire('viewreset');
+			this.map.on('move', onMove);
+
 			this.map.flyToBounds(bounds, {
 				duration: 1.5,
 				maxZoom: currentZoom,
 				padding: [50, 50]
+			});
+
+			this.map.once('moveend', () => {
+				this.map.off('move', onMove);
 			});
 		}
 
@@ -255,13 +271,20 @@ export class EndingScenarioManager {
 			const bounds = L.latLngBounds(allCoords);
 			const currentZoom = this.map.getZoom();
 
+			// Force viewreset during fly animation to ensure polylines are redrawn
+			const onMove = () => this.map.fire('viewreset');
+			this.map.on('move', onMove);
+
 			this.map.flyToBounds(bounds, {
 				duration: 1.5,
 				maxZoom: currentZoom,
 				padding: [80, 80]
 			});
 
-			this.map.once('moveend', showFrame);
+			this.map.once('moveend', () => {
+				this.map.off('move', onMove);
+				showFrame();
+			});
 		} else {
 			showFrame();
 		}
@@ -308,13 +331,20 @@ export class EndingScenarioManager {
 			const bounds = L.latLngBounds(allCoords);
 			const currentZoom = this.map.getZoom();
 
+			// Force viewreset during fly animation to ensure polylines are redrawn
+			const onMove = () => this.map.fire('viewreset');
+			this.map.on('move', onMove);
+
 			this.map.flyToBounds(bounds, {
 				duration: 1.5,
 				maxZoom: currentZoom,
 				padding: [80, 80]
 			});
 
-			this.map.once('moveend', showFrame);
+			this.map.once('moveend', () => {
+				this.map.off('move', onMove);
+				showFrame();
+			});
 		} else {
 			showFrame();
 		}

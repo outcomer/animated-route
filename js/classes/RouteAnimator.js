@@ -21,8 +21,6 @@ export class RouteAnimator {
 		this.animatedLine = null;
 		this.segments = [];
 		this.isRunning = false;
-
-		this.renderer = L.canvas();
 	}
 
 	/**
@@ -114,8 +112,7 @@ export class RouteAnimator {
 				color: this.state.trackColor,
 				weight: 4,
 				opacity: 0.8,
-				smoothFactor: 2.0,
-				renderer: this.renderer
+				smoothFactor: 2.0
 			}).addTo(this.map);
 		}
 
